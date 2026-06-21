@@ -27,6 +27,7 @@ export default function TableOrderPage() {
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedMenu, setSelectedMenu] = useState<MenuItem | null>(null);
+  const [activeCategory, setActiveCategory] = useState<"all" | "noodle" | "rice" | "drink">("all");
   const [selectedOptions, setSelectedOptions] = useState<SelectedOption[]>([]);
   const [note, setNote] = useState("");
   const [qty, setQty] = useState(1);
@@ -43,6 +44,10 @@ export default function TableOrderPage() {
     (sum, item) => sum + item.itemTotal * item.qty,
     0
   );
+  const filteredMenuItems =
+    activeCategory === "all"
+     ? menuItems
+     : menuItems.filter((item) => item.station === activeCategory);
 
   const openMenu = (item: MenuItem) => {
     setSelectedMenu(item);
@@ -186,9 +191,33 @@ export default function TableOrderPage() {
         </div>
 
         <h2 className="mt-6 text-2xl font-bold">เมนูอาหาร</h2>
+        <div className="mt-4 flex gap-2 overflow-x-auto pb-2">
+  {[
+    { id: "all", label: "ทั้งหมด" },
+    { id: "noodle", label: "ก๋วยเตี๋ยว" },
+    { id: "rice", label: "ตามสั่ง" },
+    { id: "drink", label: "เครื่องดื่ม" },
+  ].map((category) => (
+    <button
+      key={category.id}
+      onClick={() =>
+        setActiveCategory(
+          category.id as "all" | "noodle" | "rice" | "drink"
+        )
+      }
+      className={`whitespace-nowrap rounded-full px-4 py-2 font-bold ${
+        activeCategory === category.id
+          ? "bg-orange-600 text-white"
+          : "bg-white text-gray-800 shadow"
+      }`}
+    >
+      {category.label}
+    </button>
+  ))}
+</div>
 
         <div className="mt-4 grid gap-3">
-          {menuItems.map((item) => (
+          {filteredMenuItems.map((item) => (
             <button
               key={item.id}
               onClick={() => openMenu(item)}
