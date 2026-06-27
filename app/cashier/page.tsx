@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { supabase } from "@/app/lib/supabase";
 import { menuItems, MenuItem, MenuOption } from "@/app/data/menu";
 
 type Station = "noodle" | "rice" | "drink";
+type AddMenuCategory = "noodle" | "rice" | "drink";
 
 type OrderOption = {
   name: string;
@@ -44,6 +46,16 @@ const getItemUnitPrice = (item: OrderItem) => {
   return Number(item.item_total || item.price);
 };
 
+function getTableName(tableNo: string) {
+  if (tableNo.startsWith("takeaway-")) {
+    const billNo = tableNo.replace("takeaway-", "");
+    return `กลับบ้าน ${billNo}`;
+  }
+
+  if (tableNo === "takeaway") return "กลับบ้าน";
+  return `โต๊ะ ${tableNo}`;
+}
+
 export default function CashierPage() {
   const [orders, setOrders] = useState<OrderItem[]>([]);
   const [selectedTable, setSelectedTable] = useState<string>("");
@@ -58,9 +70,30 @@ export default function CashierPage() {
   const [isAddItemOpen, setIsAddItemOpen] = useState(false);
   const [selectedMenu, setSelectedMenu] = useState<MenuItem | null>(null);
   const [selectedOptions, setSelectedOptions] = useState<SelectedOption[]>([]);
+  const [openOptionGroups, setOpenOptionGroups] = useState<Record<string, boolean>>(
+  {}
+);
   const [addItemNote, setAddItemNote] = useState("");
   const [addItemQty, setAddItemQty] = useState(1);
 
+  const [isCustomItemOpen, setIsCustomItemOpen] = useState(false);
+  const [customItemName, setCustomItemName] = useState("");
+  const [customItemPrice, setCustomItemPrice] = useState<number>(0);
+  const [customItemQty, setCustomItemQty] = useState(1);
+  const [customItemStation, setCustomItemStation] = useState<Station>("rice");
+  const [customItemNote, setCustomItemNote] = useState("");
+
+  const [isMoveTableOpen, setIsMoveTableOpen] = useState(false);
+  const [targetTable, setTargetTable] = useState("");
+
+  const [activeAddCategory, setActiveAddCategory] =
+    useState<AddMenuCategory>("noodle");
+
+  const [optionStatusMap, setOptionStatusMap] = useState<
+    Map<string, boolean>
+  >(new Map());
+
+  
   const [lastReceipt, setLastReceipt] = useState<{
     receiptNo: string;
     tableNo: string;
@@ -90,8 +123,35 @@ export default function CashierPage() {
     setIsLoading(false);
   };
 
+  const loadOptionStatus = async () => {
+    const { data, error } = await supabase.from("option_status").select("*");
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    const map = new Map<string, boolean>();
+
+    (data || []).forEach((item) => {
+      map.set(item.option_id, item.is_available);
+    });
+
+    setOptionStatusMap(map);
+  };
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tableFromUrl = params.get("table");
+
+    if (tableFromUrl) {
+      setSelectedTable(tableFromUrl);
+    }
+  }, []);
+
   useEffect(() => {
     loadOrders();
+    loadOptionStatus();
 
     const timer = setInterval(() => {
       loadOrders();
@@ -129,6 +189,12 @@ export default function CashierPage() {
     0
   );
 
+  useEffect(() => {
+    if (selectedTable && total > 0 && paymentMethod === "cash") {
+      setCashReceived(total);
+    }
+  }, [selectedTable, total, paymentMethod]);
+
   const changeAmount =
     paymentMethod === "cash" ? Math.max(cashReceived - total, 0) : 0;
 
@@ -137,7 +203,13 @@ export default function CashierPage() {
     0
   );
 
-  const addItemUnitTotal = selectedMenu ? selectedMenu.price + addOptionTotal : 0;
+  const addItemUnitTotal = selectedMenu
+    ? selectedMenu.price + addOptionTotal
+    : 0;
+
+  const filteredAddMenuItems = useMemo(() => {
+    return menuItems.filter((item) => item.station === activeAddCategory);
+  }, [activeAddCategory]);
 
   const openAddItem = () => {
     if (!selectedTable) {
@@ -150,6 +222,7 @@ export default function CashierPage() {
     setSelectedOptions([]);
     setAddItemNote("");
     setAddItemQty(1);
+    setActiveAddCategory("noodle");
   };
 
   const closeAddItem = () => {
@@ -160,6 +233,133 @@ export default function CashierPage() {
     setAddItemQty(1);
   };
 
+  const openCustomItem = () => {
+    if (!selectedTable) {
+      alert("กรุณาเลือกโต๊ะก่อนค่ะ");
+      return;
+    }
+
+    setIsCustomItemOpen(true);
+    setCustomItemName("");
+    setCustomItemPrice(0);
+    setCustomItemQty(1);
+    setCustomItemStation("rice");
+    setCustomItemNote("");
+  };
+
+  const closeCustomItem = () => {
+    setIsCustomItemOpen(false);
+    setCustomItemName("");
+    setCustomItemPrice(0);
+    setCustomItemQty(1);
+    setCustomItemStation("rice");
+    setCustomItemNote("");
+  };
+
+  const openMoveTable = () => {
+    if (!selectedTable) {
+      alert("กรุณาเลือกโต๊ะก่อนค่ะ");
+      return;
+    }
+
+    setTargetTable("");
+    setIsMoveTableOpen(true);
+  };
+
+  const closeMoveTable = () => {
+    setIsMoveTableOpen(false);
+    setTargetTable("");
+  };
+
+  const moveTable = async () => {
+    if (!selectedTable) {
+      alert("กรุณาเลือกโต๊ะก่อนค่ะ");
+      return;
+    }
+
+    if (!targetTable.trim()) {
+      alert("กรุณาใส่เลขโต๊ะปลายทางค่ะ");
+      return;
+    }
+
+    const newTableNo = targetTable.trim();
+
+    if (newTableNo === selectedTable) {
+      alert("โต๊ะปลายทางเป็นโต๊ะเดิมค่ะ");
+      return;
+    }
+
+    const confirmed = confirm(
+      `ต้องการย้าย ${getTableName(selectedTable)} ไปเป็น ${getTableName(
+        newTableNo
+      )} ใช่ไหม?`
+    );
+
+    if (!confirmed) return;
+
+    const { error } = await supabase
+      .from("orders")
+      .update({ table_no: newTableNo })
+      .eq("table_no", selectedTable)
+      .eq("paid", false);
+
+    if (error) {
+      console.error(error);
+      alert("ย้ายโต๊ะไม่สำเร็จ: " + error.message);
+      return;
+    }
+
+    setSelectedTable(newTableNo);
+    closeMoveTable();
+    await loadOrders();
+  };
+
+  const addCustomItemToTable = async () => {
+    if (!selectedTable) {
+      alert("กรุณาเลือกโต๊ะก่อนค่ะ");
+      return;
+    }
+
+    if (!customItemName.trim()) {
+      alert("กรุณาใส่ชื่อรายการค่ะ");
+      return;
+    }
+
+    if (customItemPrice < 0) {
+      alert("ราคาต้องไม่ติดลบค่ะ");
+      return;
+    }
+
+    const newOrder = {
+      table_no: selectedTable,
+      name: customItemName.trim(),
+      price: customItemPrice,
+      qty: customItemQty,
+      note: customItemNote,
+      station: customItemStation,
+      status: "new",
+      paid: false,
+      options: [],
+      item_total: customItemPrice,
+    };
+
+    const { error } = await supabase.from("orders").insert([newOrder]);
+
+    if (error) {
+      console.error(error);
+      alert("เพิ่มรายการเองไม่สำเร็จ: " + error.message);
+      return;
+    }
+
+    closeCustomItem();
+    await loadOrders();
+  };
+  const toggleOptionGroupOpen = (groupId: string) => {
+  setOpenOptionGroups((prev) => ({
+    ...prev,
+    [groupId]: !prev[groupId],
+  }));
+};
   const isOptionSelected = (optionId: string) => {
     return selectedOptions.some((option) => option.id === optionId);
   };
@@ -362,6 +562,10 @@ export default function CashierPage() {
     setSelectedTable("");
     setCashReceived(0);
     await loadOrders();
+
+    setTimeout(() => {
+      window.location.href = "/pos";
+    }, 800);
   };
 
   return (
@@ -393,12 +597,23 @@ export default function CashierPage() {
 
       <div className="no-print mx-auto max-w-6xl">
         <div className="rounded-xl bg-white p-5 shadow">
-          <h1 className="text-3xl font-bold text-orange-900">
-            แคชเชียร์ ร้านหลงมา
-          </h1>
-          <p className="text-gray-500">
-            เลือกโต๊ะ แก้ไขบิล เพิ่มรายการ รับเงิน และพิมพ์ใบเสร็จ
-          </p>
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-orange-900">
+                แคชเชียร์ ร้านหลงมา
+              </h1>
+              <p className="text-gray-500">
+                เลือกโต๊ะ แก้ไขบิล เพิ่มรายการ รับเงิน และพิมพ์ใบเสร็จ
+              </p>
+            </div>
+
+            <Link
+              href="/pos"
+              className="rounded-xl bg-gray-900 px-4 py-3 text-center font-bold text-white hover:bg-gray-800"
+            >
+              กลับหน้าแผนผังโต๊ะ
+            </Link>
+          </div>
         </div>
 
         <div className="mt-6 grid gap-6 md:grid-cols-2">
@@ -425,7 +640,9 @@ export default function CashierPage() {
                     }`}
                   >
                     <div className="flex justify-between">
-                      <p className="text-2xl font-bold">โต๊ะ {table.tableNo}</p>
+                      <p className="text-2xl font-bold">
+                        {getTableName(table.tableNo)}
+                      </p>
                       <p className="text-2xl font-bold text-orange-700">
                         {table.total}฿
                       </p>
@@ -445,12 +662,28 @@ export default function CashierPage() {
               <h2 className="text-2xl font-bold">รายละเอียดบิล</h2>
 
               {selectedTable && (
-                <button
-                  onClick={openAddItem}
-                  className="rounded-xl bg-orange-600 px-4 py-2 font-bold text-white"
-                >
-                  + เพิ่มรายการ
-                </button>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={openAddItem}
+                    className="rounded-xl bg-orange-600 px-4 py-3 font-bold text-white hover:bg-orange-700"
+                  >
+                    + เพิ่มเมนู
+                  </button>
+
+                  <button
+                    onClick={openCustomItem}
+                    className="min-w-[140px] rounded-xl bg-yellow-400 px-4 py-3 font-bold text-gray-950 shadow hover:bg-yellow-500"
+                  >
+                    + รายการเอง
+                  </button>
+
+                  <button
+                    onClick={openMoveTable}
+                    className="rounded-xl bg-blue-600 px-4 py-3 font-bold text-white shadow hover:bg-blue-700"
+                  >
+                    ย้ายโต๊ะ
+                  </button>
+                </div>
               )}
             </div>
 
@@ -458,7 +691,9 @@ export default function CashierPage() {
               <p className="mt-4 text-gray-500">เลือกโต๊ะทางซ้ายก่อนค่ะ</p>
             ) : (
               <div className="mt-4">
-                <p className="text-xl font-bold">โต๊ะ {selectedTable}</p>
+                <p className="text-xl font-bold">
+                  {getTableName(selectedTable)}
+                </p>
 
                 <div className="mt-4 space-y-4">
                   {selectedItems.map((item) => (
@@ -632,7 +867,7 @@ export default function CashierPage() {
             <div className="flex items-start justify-between gap-4">
               <div>
                 <h2 className="text-2xl font-bold">
-                  เพิ่มรายการ โต๊ะ {selectedTable}
+                  เพิ่มรายการ {getTableName(selectedTable)}
                 </h2>
                 <p className="text-gray-500">
                   เลือกเมนู ใส่ตัวเลือก แล้วเพิ่มเข้าบิล
@@ -648,15 +883,45 @@ export default function CashierPage() {
             </div>
 
             <div className="mt-5">
-              <h3 className="font-bold">เลือกเมนู</h3>
+              <h3 className="font-bold">เลือกหมวดเมนู</h3>
+
+              <div className="mt-2 flex gap-2 overflow-x-auto pb-2">
+                {[
+                  { id: "noodle", label: "ก๋วยเตี๋ยว" },
+                  { id: "rice", label: "ตามสั่ง" },
+                  { id: "drink", label: "เครื่องดื่ม" },
+                ].map((category) => (
+                  <button
+                    key={category.id}
+                    onClick={() => {
+                      setActiveAddCategory(category.id as AddMenuCategory);
+                      setSelectedMenu(null);
+                      setSelectedOptions([]);
+                      setOpenOptionGroups({});
+                      setAddItemNote("");
+                      setAddItemQty(1);
+                    }}
+                    className={`whitespace-nowrap rounded-full px-4 py-2 font-bold ${
+                      activeAddCategory === category.id
+                        ? "bg-orange-600 text-white"
+                        : "bg-gray-100 text-gray-800"
+                    }`}
+                  >
+                    {category.label}
+                  </button>
+                ))}
+              </div>
+
+              <h3 className="mt-4 font-bold">เลือกเมนู</h3>
 
               <div className="mt-2 grid gap-2">
-                {menuItems.map((item) => (
+                {filteredAddMenuItems.map((item) => (
                   <button
                     key={item.id}
                     onClick={() => {
                       setSelectedMenu(item);
                       setSelectedOptions([]);
+                      setOpenOptionGroups({});
                       setAddItemNote("");
                       setAddItemQty(1);
                     }}
@@ -675,46 +940,95 @@ export default function CashierPage() {
 
             {selectedMenu && (
               <>
-                {selectedMenu.optionGroups?.map((group) => (
-                  <div key={group.id} className="mt-5">
-                    <h3 className="text-lg font-bold">{group.name}</h3>
-                    <p className="text-sm text-gray-500">
-                      {group.type === "single"
-                        ? "เลือกได้ 1 อย่าง"
-                        : "เลือกได้หลายอย่าง"}
-                    </p>
+                {selectedMenu.optionGroups?.map((group) => {
+                  const isOpen = openOptionGroups[group.id] || false;
 
-                    <div className="mt-2 grid gap-2">
-                      {group.options.map((option) => {
-                        const selected = isOptionSelected(option.id);
+                  const selectedInGroup = selectedOptions.filter(
+                    (option) => option.groupId === group.id
+                  );
 
-                        return (
-                          <button
-                            key={option.id}
-                            onClick={() =>
-                              toggleOption(
-                                group.id,
-                                group.name,
-                                group.type,
-                                option
-                              )
-                            }
-                            className={`flex justify-between rounded-xl border p-3 text-left ${
-                              selected
-                                ? "border-orange-500 bg-orange-100"
-                                : "bg-white"
+                  const selectedText =
+                    selectedInGroup.length > 0
+                      ? selectedInGroup.map((option) => option.name).join(", ")
+                      : "ยังไม่ได้เลือก";
+
+                  const availableOptions = group.options.filter(
+                    (option) =>
+                      optionStatusMap.get(option.stockId || option.id) !== false
+                  );
+
+                  return (
+                    <div key={group.id} className="mt-4 rounded-2xl border bg-white">
+                      <button
+                        type="button"
+                        onClick={() => toggleOptionGroupOpen(group.id)}
+                        className="flex w-full items-center justify-between gap-3 rounded-2xl p-4 text-left"
+                      >
+                        <div>
+                          <h3 className="text-lg font-bold">{group.name}</h3>
+                          <p className="text-sm text-gray-500">
+                            {group.type === "single"
+                              ? "เลือกได้ 1 อย่าง"
+                              : "เลือกได้หลายอย่าง"}
+                          </p>
+                          <p
+                            className={`mt-1 text-sm ${
+                              selectedInGroup.length > 0
+                                ? "font-bold text-orange-700"
+                                : "text-gray-400"
                             }`}
                           >
-                            <span className="font-bold">{option.name}</span>
-                            <span>
-                              {option.price > 0 ? `+${option.price}฿` : "ฟรี"}
-                            </span>
-                          </button>
-                        );
-                      })}
+                            {selectedText}
+                          </p>
+                        </div>
+
+                        <span className="text-2xl font-bold text-orange-700">
+                          {isOpen ? "▲" : "▼"}
+                        </span>
+                      </button>
+
+                      {isOpen && (
+                        <div className="grid gap-2 border-t p-3">
+                          {availableOptions.length === 0 ? (
+                            <p className="rounded-xl bg-red-50 p-3 text-sm font-bold text-red-700">
+                              ตัวเลือกในหมวดนี้หมดค่ะ
+                            </p>
+                          ) : (
+                            availableOptions.map((option) => {
+                              const selected = isOptionSelected(option.id);
+
+                              return (
+                                <button
+                                  key={option.id}
+                                  onClick={() =>
+                                    toggleOption(
+                                      group.id,
+                                      group.name,
+                                      group.type,
+                                      option
+                                    )
+                                  }
+                                  className={`flex justify-between rounded-xl border p-3 text-left ${
+                                    selected
+                                      ? "border-orange-500 bg-orange-100"
+                                      : "bg-white"
+                                  }`}
+                                >
+                                  <span className="font-bold">{option.name}</span>
+                                  <span>
+                                    {option.price > 0
+                                      ? `+${option.price}฿`
+                                      : "ฟรี"}
+                                  </span>
+                                </button>
+                              );
+                            })
+                          )}
+                        </div>
+                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
 
                 <div className="mt-5">
                   <h3 className="font-bold">หมายเหตุ</h3>
@@ -767,82 +1081,278 @@ export default function CashierPage() {
         </div>
       )}
 
-      {lastReceipt && (
-        <div className="print-only font-mono text-sm">
-          <div className="text-center">
-            <h1 className="text-lg font-bold">หลงมา</h1>
-            <p>ก๋วยเตี๋ยว / อาหารตามสั่ง</p>
-          </div>
-
-          <div className="my-2 border-t border-dashed border-black" />
-
-          <p>ใบเสร็จเลขที่: {lastReceipt.receiptNo}</p>
-          <p>โต๊ะ: {lastReceipt.tableNo}</p>
-          <p>
-            วันที่:{" "}
-            {new Date(lastReceipt.paidAt).toLocaleString("th-TH", {
-              dateStyle: "short",
-              timeStyle: "short",
-            })}
-          </p>
-
-          <div className="my-2 border-t border-dashed border-black" />
-
-          {lastReceipt.items.map((item) => (
-            <div key={item.id} className="mb-2">
-              <div className="flex justify-between">
-                <span>
-                  {item.name} x {item.qty}
-                </span>
-                <span>{getItemUnitPrice(item) * item.qty}</span>
+      {isCustomItemOpen && (
+        <div className="fixed inset-0 z-50 flex items-end bg-black/50 md:items-center">
+          <div className="mx-auto w-full max-w-xl rounded-t-2xl bg-white p-5 shadow md:rounded-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-bold">
+                  เพิ่มรายการเอง {getTableName(selectedTable)}
+                </h2>
+                <p className="text-gray-500">
+                  ใช้สำหรับเมนูพิเศษ / ลูกค้าสั่งนอกเมนู / คิดราคาเอง
+                </p>
               </div>
 
-              {item.options && item.options.length > 0 && (
-                <div>
-                  {item.options.map((option, index) => (
-                    <p key={index}>
-                      + {option.name}
-                      {option.price > 0 ? ` ${option.price}฿` : ""}
-                    </p>
-                  ))}
-                </div>
-              )}
-
-              {item.note && <p>หมายเหตุ: {item.note}</p>}
+              <button
+                onClick={closeCustomItem}
+                className="rounded-full bg-gray-100 px-3 py-1 font-bold"
+              >
+                ✕
+              </button>
             </div>
-          ))}
 
-          <div className="my-2 border-t border-dashed border-black" />
-
-          <div className="flex justify-between font-bold">
-            <span>รวมทั้งหมด</span>
-            <span>{lastReceipt.total} บาท</span>
-          </div>
-
-          <div className="flex justify-between">
-            <span>ชำระโดย</span>
-            <span>
-              {lastReceipt.paymentMethod === "cash" ? "เงินสด" : "โอน"}
-            </span>
-          </div>
-
-          <div className="flex justify-between">
-            <span>รับเงิน</span>
-            <span>{lastReceipt.cashReceived} บาท</span>
-          </div>
-
-          {lastReceipt.paymentMethod === "cash" && (
-            <div className="flex justify-between">
-              <span>เงินทอน</span>
-              <span>{lastReceipt.changeAmount} บาท</span>
+            <div className="mt-5">
+              <label className="font-bold">ชื่อรายการ</label>
+              <input
+                value={customItemName}
+                onChange={(e) => setCustomItemName(e.target.value)}
+                placeholder="เช่น ข้าวกะเพราหมูกรอบ + ไก่กรอบ"
+                className="mt-2 w-full rounded-xl border p-3"
+              />
             </div>
-          )}
 
-          <div className="my-2 border-t border-dashed border-black" />
+            <div className="mt-4">
+              <label className="font-bold">ราคา</label>
+              <input
+                type="number"
+                value={customItemPrice}
+                onChange={(e) => setCustomItemPrice(Number(e.target.value))}
+                className="mt-2 w-full rounded-xl border p-3 text-xl font-bold"
+              />
+            </div>
 
-          <p className="text-center">ขอบคุณค่ะ</p>
+            <div className="mt-4">
+              <label className="font-bold">ส่งเข้าครัวไหน</label>
+
+              <div className="mt-2 grid grid-cols-3 gap-2">
+                {[
+                  { id: "rice", label: "ตามสั่ง" },
+                  { id: "noodle", label: "ก๋วยเตี๋ยว" },
+                  { id: "drink", label: "เครื่องดื่ม" },
+                ].map((station) => (
+                  <button
+                    key={station.id}
+                    onClick={() =>
+                      setCustomItemStation(station.id as Station)
+                    }
+                    className={`rounded-xl p-3 font-bold ${
+                      customItemStation === station.id
+                        ? "bg-orange-600 text-white"
+                        : "bg-gray-100 text-gray-800"
+                    }`}
+                  >
+                    {station.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <label className="font-bold">หมายเหตุ</label>
+              <input
+                value={customItemNote}
+                onChange={(e) => setCustomItemNote(e.target.value)}
+                placeholder="เช่น ไม่ใส่ผัก / แยกน้ำ / เผ็ดน้อย"
+                className="mt-2 w-full rounded-xl border p-3"
+              />
+            </div>
+
+            <div className="mt-5 flex items-center justify-between">
+              <span className="font-bold">จำนวน</span>
+
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() =>
+                    setCustomItemQty((prev) => Math.max(prev - 1, 1))
+                  }
+                  className="rounded-lg bg-gray-100 px-4 py-2 font-bold"
+                >
+                  -
+                </button>
+
+                <span className="text-xl font-bold">{customItemQty}</span>
+
+                <button
+                  onClick={() => setCustomItemQty((prev) => prev + 1)}
+                  className="rounded-lg bg-gray-100 px-4 py-2 font-bold"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-5 flex justify-between text-xl font-bold">
+              <span>รวมรายการนี้</span>
+              <span>{customItemPrice * customItemQty} บาท</span>
+            </div>
+
+            <button
+              onClick={addCustomItemToTable}
+              className="mt-5 w-full rounded-xl bg-yellow-400 px-4 py-3 font-bold text-gray-950 shadow hover:bg-yellow-500"
+            >
+              เพิ่มรายการเองเข้าบิล
+            </button>
+          </div>
         </div>
       )}
+
+      {isMoveTableOpen && (
+        <div className="fixed inset-0 z-50 flex items-end bg-black/50 md:items-center">
+          <div className="mx-auto w-full max-w-md rounded-t-2xl bg-white p-5 shadow md:rounded-2xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-2xl font-bold">ย้ายโต๊ะ</h2>
+                <p className="text-gray-500">
+                  ย้ายบิลจาก {getTableName(selectedTable)} ไปโต๊ะใหม่
+                </p>
+              </div>
+
+              <button
+                onClick={closeMoveTable}
+                className="rounded-full bg-gray-100 px-3 py-1 font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="mt-5">
+              <label className="font-bold">เลขโต๊ะปลายทาง</label>
+              <input
+                value={targetTable}
+                onChange={(e) => setTargetTable(e.target.value)}
+                placeholder="เช่น 5 หรือ takeaway-123456"
+                className="mt-2 w-full rounded-xl border p-4 text-2xl font-bold"
+              />
+            </div>
+
+            <div className="mt-5 grid grid-cols-3 gap-2">
+              {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map(
+                (tableNo) => (
+                  <button
+                    key={tableNo}
+                    onClick={() => setTargetTable(tableNo)}
+                    className={`rounded-xl p-3 font-bold ${
+                      targetTable === tableNo
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-100 text-gray-900"
+                    }`}
+                  >
+                    โต๊ะ {tableNo}
+                  </button>
+                )
+              )}
+            </div>
+
+            <button
+              onClick={moveTable}
+              className="mt-5 w-full rounded-xl bg-blue-600 p-4 text-xl font-bold text-white hover:bg-blue-700"
+            >
+              ยืนยันย้ายโต๊ะ
+            </button>
+          </div>
+        </div>
+      )}
+
+      {lastReceipt && (
+  <div className="print-only font-mono text-[12px] leading-tight">
+    <div className="text-center">
+      <h1 className="text-xl font-bold">หลงมา</h1>
+      <p>ก๋วยเตี๋ยว / อาหารตามสั่ง</p>
+      <p>ขอบคุณที่อุดหนุนค่ะ</p>
+    </div>
+
+    <div className="my-2 border-t border-dashed border-black" />
+
+    <div className="space-y-1">
+      <p>ใบเสร็จ: {lastReceipt.receiptNo}</p>
+      <p>โต๊ะ/บิล: {getTableName(lastReceipt.tableNo)}</p>
+      <p>
+        วันที่:{" "}
+        {new Date(lastReceipt.paidAt).toLocaleString("th-TH", {
+          dateStyle: "short",
+          timeStyle: "short",
+        })}
+      </p>
+    </div>
+
+    <div className="my-2 border-t border-dashed border-black" />
+
+    <div className="space-y-2">
+      {lastReceipt.items.map((item) => {
+        const unitPrice = getItemUnitPrice(item);
+        const lineTotal = unitPrice * item.qty;
+
+        return (
+          <div key={item.id}>
+            <div className="flex justify-between gap-2">
+              <div className="flex-1">
+                <p className="font-bold">
+                  {item.name} x{item.qty}
+                </p>
+                <p className="text-[11px]">
+                  {unitPrice} x {item.qty}
+                </p>
+              </div>
+
+              <p className="font-bold">{lineTotal}</p>
+            </div>
+
+            {item.options && item.options.length > 0 && (
+              <div className="ml-2 mt-1">
+                {item.options.map((option, index) => (
+                  <p key={index}>
+                    - {option.name}
+                    {option.price > 0 ? ` +${option.price}` : ""}
+                  </p>
+                ))}
+              </div>
+            )}
+
+            {item.note && (
+              <p className="ml-2 mt-1">* หมายเหตุ: {item.note}</p>
+            )}
+          </div>
+        );
+      })}
+    </div>
+
+    <div className="my-2 border-t border-dashed border-black" />
+
+    <div className="space-y-1">
+      <div className="flex justify-between text-base font-bold">
+        <span>รวมทั้งหมด</span>
+        <span>{lastReceipt.total} บาท</span>
+      </div>
+
+      <div className="flex justify-between">
+        <span>ชำระโดย</span>
+        <span>
+          {lastReceipt.paymentMethod === "cash" ? "เงินสด" : "โอน"}
+        </span>
+      </div>
+
+      <div className="flex justify-between">
+        <span>รับเงิน</span>
+        <span>{lastReceipt.cashReceived} บาท</span>
+      </div>
+
+      {lastReceipt.paymentMethod === "cash" && (
+        <div className="flex justify-between">
+          <span>เงินทอน</span>
+          <span>{lastReceipt.changeAmount} บาท</span>
+        </div>
+      )}
+    </div>
+
+    <div className="my-2 border-t border-dashed border-black" />
+
+    <div className="text-center">
+      <p>ขอบคุณค่ะ</p>
+      <p>แล้วแวะมาอีกนะคะ</p>
+    </div>
+  </div>
+)}
     </main>
   );
 }

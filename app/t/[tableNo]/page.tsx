@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { menuItems, MenuItem, MenuOption } from "@/app/data/menu";
 import { supabase } from "@/app/lib/supabase";
 
@@ -29,9 +29,15 @@ export default function TableOrderPage() {
   const [selectedMenu, setSelectedMenu] = useState<MenuItem | null>(null);
   const [activeCategory, setActiveCategory] = useState<"all" | "noodle" | "rice" | "drink">("all");
   const [selectedOptions, setSelectedOptions] = useState<SelectedOption[]>([]);
+  const [openOptionGroups, setOpenOptionGroups] = useState<Record<string, boolean>>(
+    {}
+  );
   const [note, setNote] = useState("");
   const [qty, setQty] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [optionStatusMap, setOptionStatusMap] = useState<Map<string, boolean>>(
+  new Map()
+);
 
   const optionTotal = selectedOptions.reduce(
     (sum, option) => sum + option.price,
@@ -52,6 +58,7 @@ export default function TableOrderPage() {
   const openMenu = (item: MenuItem) => {
     setSelectedMenu(item);
     setSelectedOptions([]);
+    setOpenOptionGroups({});
     setNote("");
     setQty(1);
   };
@@ -59,8 +66,16 @@ export default function TableOrderPage() {
   const closeMenu = () => {
     setSelectedMenu(null);
     setSelectedOptions([]);
+    setOpenOptionGroups({});
     setNote("");
     setQty(1);
+  };
+
+  const toggleOptionGroupOpen = (groupId: string) => {
+    setOpenOptionGroups((prev) => ({
+      ...prev,
+      [groupId]: !prev[groupId],
+    }));
   };
 
   const isOptionSelected = (optionId: string) => {
@@ -178,7 +193,28 @@ export default function TableOrderPage() {
     alert("ส่งออเดอร์เรียบร้อยค่ะ");
     setCart([]);
   };
+  const loadOptionStatus = async () => {
+  const { data, error } = await supabase
+    .from("option_status")
+    .select("*");
 
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  const map = new Map<string, boolean>();
+
+  (data || []).forEach((item) => {
+    map.set(item.option_id, item.is_available);
+  });
+
+  setOptionStatusMap(map);
+};
+
+useEffect(() => {
+  loadOptionStatus();
+}, []);
   return (
     <main className="min-h-screen bg-orange-50 p-4">
       <div className="mx-auto max-w-3xl">
@@ -341,46 +377,93 @@ export default function TableOrderPage() {
               </button>
             </div>
 
-            {selectedMenu.optionGroups?.map((group) => (
-              <div key={group.id} className="mt-5">
-                <h3 className="text-lg font-bold">{group.name}</h3>
-                <p className="text-sm text-gray-500">
-                  {group.type === "single"
-                    ? "เลือกได้ 1 อย่าง"
-                    : "เลือกได้หลายอย่าง"}
-                </p>
+            {selectedMenu.optionGroups?.map((group) => {
+              const isOpen = openOptionGroups[group.id] || false;
 
-                <div className="mt-2 grid gap-2">
-                  {group.options.map((option) => {
-                    const selected = isOptionSelected(option.id);
+              const selectedInGroup = selectedOptions.filter(
+                (option) => option.groupId === group.id
+              );
 
-                    return (
-                      <button
-                        key={option.id}
-                        onClick={() =>
-                          toggleOption(
-                            group.id,
-                            group.name,
-                            group.type,
-                            option
-                          )
-                        }
-                        className={`flex justify-between rounded-xl border p-3 text-left ${
-                          selected
-                            ? "border-orange-500 bg-orange-100"
-                            : "bg-white"
+              const selectedText =
+                selectedInGroup.length > 0
+                  ? selectedInGroup.map((option) => option.name).join(", ")
+                  : "ยังไม่ได้เลือก";
+
+              const availableOptions = group.options.filter(
+                (option) =>
+                  optionStatusMap.get(option.stockId || option.id) !== false
+              );
+
+              return (
+                <div key={group.id} className="mt-4 rounded-2xl border bg-white">
+                  <button
+                    type="button"
+                    onClick={() => toggleOptionGroupOpen(group.id)}
+                    className="flex w-full items-center justify-between gap-3 rounded-2xl p-4 text-left"
+                  >
+                    <div>
+                      <h3 className="text-lg font-bold">{group.name}</h3>
+                      <p className="text-sm text-gray-500">
+                        {group.type === "single"
+                          ? "เลือกได้ 1 อย่าง"
+                          : "เลือกได้หลายอย่าง"}
+                      </p>
+                      <p
+                        className={`mt-1 text-sm ${
+                          selectedInGroup.length > 0
+                            ? "font-bold text-orange-700"
+                            : "text-gray-400"
                         }`}
                       >
-                        <span className="font-bold">{option.name}</span>
-                        <span>
-                          {option.price > 0 ? `+${option.price}฿` : "ฟรี"}
-                        </span>
-                      </button>
-                    );
-                  })}
+                        {selectedText}
+                      </p>
+                    </div>
+
+                    <span className="text-2xl font-bold text-orange-700">
+                      {isOpen ? "▲" : "▼"}
+                    </span>
+                  </button>
+
+                  {isOpen && (
+                    <div className="grid gap-2 border-t p-3">
+                      {availableOptions.length === 0 ? (
+                        <p className="rounded-xl bg-red-50 p-3 text-sm font-bold text-red-700">
+                          ตัวเลือกในหมวดนี้หมดค่ะ
+                        </p>
+                      ) : (
+                        availableOptions.map((option) => {
+                          const selected = isOptionSelected(option.id);
+
+                          return (
+                            <button
+                              key={option.id}
+                              onClick={() =>
+                                toggleOption(
+                                  group.id,
+                                  group.name,
+                                  group.type,
+                                  option
+                                )
+                              }
+                              className={`flex justify-between rounded-xl border p-3 text-left ${
+                                selected
+                                  ? "border-orange-500 bg-orange-100"
+                                  : "bg-white"
+                              }`}
+                            >
+                              <span className="font-bold">{option.name}</span>
+                              <span>
+                                {option.price > 0 ? `+${option.price}฿` : "ฟรี"}
+                              </span>
+                            </button>
+                          );
+                        })
+                      )}
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
 
             <div className="mt-5">
               <h3 className="font-bold">หมายเหตุ</h3>

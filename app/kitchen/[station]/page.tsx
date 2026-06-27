@@ -42,13 +42,20 @@ export default function KitchenPage() {
       : "เครื่องดื่ม";
 
   const loadOrders = async () => {
-    const { data, error } = await supabase
-      .from("orders")
-      .select("*")
-      .eq("station", station)
-      .eq("paid", false)
-      .in("status", ["new", "cooking"])
-      .order("created_at", { ascending: true });
+    let query = supabase
+  .from("orders")
+  .select("*")
+  .eq("paid", false)
+  .in("status", ["new", "cooking"])
+  .order("created_at", { ascending: true });
+
+if (station === "noodle") {
+  query = query.in("station", ["noodle", "drink"]);
+} else {
+  query = query.eq("station", station);
+}
+
+const { data, error } = await query;
 
     if (error) {
       console.error(error);
