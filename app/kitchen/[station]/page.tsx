@@ -104,7 +104,7 @@ const { data, error } = await query;
 
           <button
             onClick={() => window.print()}
-            className="rounded-xl bg-slate-800 px-4 py-3 font-bold text-white"
+            className="rounded-xl bg-slate-200 px-4 py-3 font-bold text-white"
           >
             พิมพ์หน้านี้
           </button>
@@ -153,12 +153,12 @@ const { data, error } = await query;
                 </div>
 
                 <div className="mt-5">
-                  <p className="text-2xl font-bold">
+                  <p className="text-3xl font-bold">
                     {order.qty}x {order.name}
                   </p>
 
                 {order.options && order.options.length > 0 && (
-                <div className="mt-2 rounded-lg bg-orange-50 p-3 text-lg font-bold text-orange-900">
+                <div className="mt-2 rounded-lg bg-orange-50 p-3 text-2xl font-bold text-orange-900">
                 {order.options.map((option, index) => (
                 <p key={index}>
                 + {option.name}
@@ -179,7 +179,7 @@ const { data, error } = await query;
                   {order.status === "new" && (
                     <button
                       onClick={() => updateStatus(order.id, "cooking")}
-                      className="flex-1 rounded-xl bg-blue-600 p-3 font-bold text-white"
+                      className="flex-1 rounded-xl bg-green-300 p-3 font-bold text-white"
                     >
                       เริ่มทำ
                     </button>
@@ -187,7 +187,7 @@ const { data, error } = await query;
 
                   <button
                     onClick={() => updateStatus(order.id, "done")}
-                    className="flex-1 rounded-xl bg-green-600 p-3 font-bold text-white"
+                    className="flex-1 rounded-xl bg-yellow-200 p-3 font-bold text-white"
                   >
                     เสร็จแล้ว
                   </button>

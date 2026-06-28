@@ -545,7 +545,7 @@ export const menuItems: MenuItem[] = [
   {
     id: 42,
     name: "หมูกรอบ 1 ขีด น้ำจิ้มซีฟู้ด",
-    price: 70,
+    price: 60,
     station: "rice",
     optionGroups: simpleTakeawayOptions,
   },
