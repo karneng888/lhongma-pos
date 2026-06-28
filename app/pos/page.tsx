@@ -199,7 +199,8 @@ export default function PosPage() {
           </div>
         ) : (
           <>
-            <div className="relative mx-auto h-[720px] max-w-[520px] overflow-hidden rounded-3xl bg-zinc-950 shadow-2xl">
+            <div className="w-full overflow-x-auto pb-3">
+          <div className="relative mx-auto h-[720px] w-[520px] min-w-[520px] overflow-hidden rounded-3xl bg-zinc-950 shadow-2xl">
               <div className="absolute left-1/2 top-4 -translate-x-1/2 rounded-2xl bg-white px-8 py-3 text-3xl font-bold text-black shadow">
                 ประตู
               </div>
@@ -240,7 +241,7 @@ export default function PosPage() {
                 </Link>
               ))}
             </div>
-
+            </div>
             <section className="mt-6 rounded-2xl bg-white p-5 shadow">
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
