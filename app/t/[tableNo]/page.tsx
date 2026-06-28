@@ -233,7 +233,7 @@ useEffect(() => {
           <h1 className="text-3xl font-bold text-orange-900">ร้านหลงมา</h1>
           <p className="mt-1 text-lg text-gray-700">โต๊ะ {tableNo}</p>
           <p className="text-sm text-gray-500">
-            เลือกเมนู ใส่ตัวเลือก แล้วกดยืนยันออเดอร์
+            เลือกเมนู ใส่ตัวเลือก แล้วกดยืนยันออเดอร์ ไม่เจอเมนูที่ต้องการรบกวนสั่งที่เคาเตอร์ค่ะ
           </p>
         </div>
 
