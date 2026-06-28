@@ -413,7 +413,21 @@ export default function CashierPage() {
     if (!selectedMenu) {
       alert("กรุณาเลือกเมนูก่อนค่ะ");
       return;
+      
     }
+
+    const hasMainProtein = selectedMenu.optionGroups?.some(
+  (group) => group.id === "main-protein"
+);
+
+const selectedMainProtein = selectedOptions.some(
+  (option) => option.groupId === "main-protein"
+);
+
+if (hasMainProtein && !selectedMainProtein) {
+  alert("กรุณาเลือกเนื้อสัตว์หลักก่อนค่ะ");
+  return;
+}
 
     const newOrder = {
       table_no: selectedTable,

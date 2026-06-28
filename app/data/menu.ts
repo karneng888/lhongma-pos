@@ -25,18 +25,18 @@ const mainProteinOptions: MenuOptionGroup = {
   name: "เลือกเนื้อสัตว์หลัก",
   type: "single",
   options: [
-    { id: "minced-pork", name: "หมูสับ", price: 0 },
-    { id: "sliced-pork", name: "หมูชิ้น", price: 0 },
+    { id: "minced-pork", name: "หมูสับ", price: 5 },
+    { id: "sliced-pork", name: "หมูชิ้น", price: 5 },
     { id: "chicken", name: "ไก่", price: 0 },
-    { id: "chicken-organs", name: "เครื่องในไก่", price: 0 },
-    { id: "pork-liver", name: "ตับหมู", price: 0 },
-    { id: "crispy-pork", name: "หมูกรอบ", price: 10 },
-    { id: "seafood", name: "ทะเล", price: 10 },
-    { id: "minced-beef", name: "เนื้อสับ", price: 5 },
-    { id: "sliced-beef", name: "เนื้อชิ้น", price: 5 },
-    { id: "crispy-chicken", name: "ไก่กรอบ", price: 0 },
-    { id: "stewed-pork", name: "หมูตุ๋น", price: 0 },
-    { id: "stewed-beef", name: "เนื้อตุ๋น", price: 5 },
+    { id: "chicken-organs", name: "เครื่องในไก่", price: 5 },
+    { id: "pork-liver", name: "ตับหมู", price: 5 },
+    { id: "crispy-pork", name: "หมูกรอบ", price: 15 },
+    { id: "seafood", name: "ทะเล", price: 15 },
+    { id: "minced-beef", name: "เนื้อสับ", price: 10 },
+    { id: "sliced-beef", name: "เนื้อชิ้น", price: 10 },
+    { id: "crispy-chicken", name: "ไก่กรอบ", price: 5 },
+    { id: "stewed-pork", name: "หมูตุ๋น", price: 5 },
+    { id: "stewed-beef", name: "เนื้อตุ๋น", price: 10 },
   ],
 };
 
@@ -71,7 +71,7 @@ const NoodlesSoup: MenuOptionGroup = {
 
 const addProteinOptions: MenuOptionGroup = {
   id: "add-protein",
-  name: "เพิ่มเนื้อสัตว์",
+  name: "เพิ่มเนื้อสัตว์ ถ้าลูกค้าต้องการเนื้อสัตว์เพิ่มให้เลือกอันนี้ด้วยนะคะ",
   type: "multiple",
   options: [
     { id: "add-minced-pork", name: "เพิ่มหมูสับ", price: 10, stockId: "minced-pork" },
@@ -81,7 +81,7 @@ const addProteinOptions: MenuOptionGroup = {
     { id: "add-pork-liver", name: "เพิ่มตับหมู", price: 10, stockId: "pork-liver" },
     { id: "add-crispy-pork", name: "เพิ่มหมูกรอบ", price: 15, stockId: "crispy-pork" },
     { id: "add-seafood", name: "เพิ่มทะเล", price: 15, stockId: "seafood" },
-    { id: "add-minced-beef", name: "เพิ่มเนื้อสับ", price: 25, stockId: "minced-beef" },
+    { id: "add-minced-beef", name: "เพิ่มเนื้อสับ", price: 15, stockId: "minced-beef" },
     { id: "add-sliced-beef", name: "เพิ่มเนื้อชิ้น", price: 15, stockId: "sliced-beef" },
     { id: "add-crispy-chicken", name: "เพิ่มไก่กรอบ", price: 10, stockId: "crispy-chicken" },
     { id: "add-stewed-pork", name: "เพิ่มหมูตุ๋น", price: 10, stockId: "stewed-pork" },
@@ -91,8 +91,8 @@ const addProteinOptions: MenuOptionGroup = {
 
 const takeawayOptions: MenuOptionGroup = {
   id: "takeaway",
-  name: "การรับอาหาร",
-  type: "multiple",
+  name: "สั่งกลับบ้าน",
+  type: "single",
   options: [{ id: "takeaway", name: "กลับบ้าน", price: 0 }],
 };
 
@@ -111,10 +111,10 @@ const spicyOptions: MenuOptionGroup = {
 
 const foodTypeOptions: MenuOptionGroup = {
   id: "food-type",
-  name: "รูปแบบอาหาร",
+  name: "ถ้าต้องการเป็นกับข้าวกรุณาเลือกเพิ่ม",
   type: "single",
   options: [
-    { id: "rice", name: "ราดข้าว", price: 0 },
+    
     { id: "side-dish", name: "เป็นกับข้าว", price: 30 },
   ],
 };
@@ -129,6 +129,17 @@ const eggOptions: MenuOptionGroup = {
     { id: "boiled-eeg", name: "ไข่ต้ม", price: 10 },
   ],
 };
+
+const extraOptions: MenuOptionGroup = {
+  id: "extra",
+  name: "พิเศษ",
+  type: "single",
+  options: [
+    { id: "special", name: "พิเศษ", price: 10 },
+  ],
+};
+
+
 const NoodlesSoup1: MenuOptionGroup[] = [
   Noodlesprotain,
   NoodlesSoup,
@@ -141,9 +152,11 @@ const NoodlesSoup1: MenuOptionGroup[] = [
 const riceSpicyOptions: MenuOptionGroup[] = [
   mainProteinOptions,
   addProteinOptions,
-  foodTypeOptions,
-  eggOptions,
+  extraOptions,
   spicyOptions,
+  eggOptions,
+  foodTypeOptions,
+  
   takeawayOptions,
 ];
 
@@ -151,15 +164,18 @@ const riceSpicyOptions: MenuOptionGroup[] = [
 const riceNoSpicyOptions: MenuOptionGroup[] = [
   mainProteinOptions,
   addProteinOptions,
-  foodTypeOptions,
+  extraOptions,
   eggOptions,
+  foodTypeOptions,
   takeawayOptions,
+
 ];
 
 // ใช้กับเมนูที่ไม่มีเป็นกับข้าว และไม่ต้องเลือกระดับเผ็ด เช่น ข้าวผัด / ผัดซีอิ๊ว
 const riceSimpleOptions: MenuOptionGroup[] = [
   mainProteinOptions,
   addProteinOptions,
+  extraOptions,
   eggOptions,
   takeawayOptions,
 ];
@@ -417,7 +433,7 @@ export const menuItems: MenuItem[] = [
   {
     id: 26,
     name: "ข้าวกะเพรา",
-    price: 50,
+    price: 45,
     station: "rice",
     optionGroups: riceSpicyOptions,
   },

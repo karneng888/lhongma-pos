@@ -124,7 +124,18 @@ export default function TableOrderPage() {
 
   const addSelectedMenuToCart = () => {
     if (!selectedMenu) return;
+    const hasMainProtein = selectedMenu.optionGroups?.some(
+    (group) => group.id === "main-protein"
+  );
 
+  const selectedMainProtein = selectedOptions.some(
+    (option) => option.groupId === "main-protein"
+  );
+
+  if (hasMainProtein && !selectedMainProtein) {
+    alert("กรุณาเลือกเนื้อสัตว์หลักก่อนค่ะ");
+    return;
+  }
     const newCartItem: CartItem = {
       ...selectedMenu,
       cartId: `${selectedMenu.id}-${Date.now()}`,
