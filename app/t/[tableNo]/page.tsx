@@ -241,7 +241,7 @@ useEffect(() => {
         <div className="mt-4 flex gap-2 overflow-x-auto pb-2">
   {[
     { id: "all", label: "ทั้งหมด" },
-    { id: "noodle", label: "ก๋วยเตี๋ยว-์Noodles" },
+    { id: "noodle", label: "ก๋วยเตี๋ยว-Noodles" },
     { id: "rice", label: "ตามสั่ง-Stir fried" },
     { id: "drink", label: "เครื่องดื่ม-Beverage" },
   ].map((category) => (
