@@ -946,6 +946,11 @@ if (hasMainProtein && !selectedMainProtein) {
                     }`}
                   >
                     <span className="font-bold">{item.name}</span>
+                    {item.englishName && (
+    <p className="mt-1 text-xs font-medium text-gray-500">
+      {item.englishName}
+    </p>
+  )}
                     <span>{item.price}฿</span>
                   </button>
                 ))}

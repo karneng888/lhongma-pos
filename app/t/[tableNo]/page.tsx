@@ -241,9 +241,9 @@ useEffect(() => {
         <div className="mt-4 flex gap-2 overflow-x-auto pb-2">
   {[
     { id: "all", label: "ทั้งหมด" },
-    { id: "noodle", label: "ก๋วยเตี๋ยว" },
-    { id: "rice", label: "ตามสั่ง" },
-    { id: "drink", label: "เครื่องดื่ม" },
+    { id: "noodle", label: "ก๋วยเตี๋ยว-์Noodles" },
+    { id: "rice", label: "ตามสั่ง-Stir fried" },
+    { id: "drink", label: "เครื่องดื่ม-Beverage" },
   ].map((category) => (
     <button
       key={category.id}
@@ -272,7 +272,13 @@ useEffect(() => {
             >
               <div>
                 <p className="text-lg font-bold">{item.name}</p>
+                {item.englishName && (
+                <p className="mt-1 text-xs font-medium text-gray-500">
+                {item.englishName}
+                </p>
+              )}
                 <p className="text-sm text-gray-500">
+                  
                   หมวด:{" "}
                   {item.station === "noodle"
                     ? "ก๋วยเตี๋ยว"
@@ -414,6 +420,12 @@ useEffect(() => {
                   >
                     <div>
                       <h3 className="text-lg font-bold">{group.name}</h3>
+                      {group.englishName && (
+                      <p className="text-sm font-medium text-gray-500">
+                      {group.englishName}
+                     </p>
+                      )}
+                      
                       <p className="text-sm text-gray-500">
                         {group.type === "single"
                           ? "เลือกได้ 1 อย่าง"
@@ -462,9 +474,17 @@ useEffect(() => {
                                   : "bg-white"
                               }`}
                             >
-                              <span className="font-bold">{option.name}</span>
-                              <span>
-                                {option.price > 0 ? `+${option.price}฿` : "ฟรี"}
+                              <div>
+                          <p className="font-bold">{option.name}</p>
+
+                    {option.englishName && (
+                    <p className="text-xs font-medium text-gray-500">
+                    {option.englishName}
+                   </p>
+                )}
+                </div>
+                  <span>
+                                {option.price > 0 ? `+${option.price}฿` : "0"}
                               </span>
                             </button>
                           );
@@ -477,17 +497,17 @@ useEffect(() => {
             })}
 
             <div className="mt-5">
-              <h3 className="font-bold">หมายเหตุ</h3>
+              <h3 className="font-bold">หมายเหตุ 'Remark'</h3>
               <input
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
-                placeholder="เช่น ไม่ใส่ผัก / เผ็ดน้อย / ไม่ใส่น้ำตาล"
+                placeholder="เช่น ไม่ใส่ผัก(no veg) / ไม่ใส่น้ำตาล(no sugar)"
                 className="mt-2 w-full rounded-xl border p-3"
               />
             </div>
 
             <div className="mt-5 flex items-center justify-between">
-              <span className="font-bold">จำนวน</span>
+              <span className="font-bold">จำนวน 'Qty'</span>
 
               <div className="flex items-center gap-3">
                 <button
@@ -510,14 +530,15 @@ useEffect(() => {
 
             <div className="mt-5 flex justify-between text-xl font-bold">
               <span>รวมรายการนี้</span>
-              <span>{selectedItemTotal * qty} บาท</span>
+              <span>{selectedItemTotal * qty} ฿</span>
             </div>
 
             <button
               onClick={addSelectedMenuToCart}
               className="mt-5 w-full rounded-xl bg-orange-600 p-4 text-xl font-bold text-white hover:bg-orange-700"
             >
-              เพิ่มลงตะกร้า
+              <span className="block">เพิ่มลงตะกร้า</span>
+<span className="block text-sm font-medium">Add to Cart</span>
             </button>
           </div>
         </div>
