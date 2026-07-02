@@ -236,7 +236,25 @@ useEffect(() => {
             เลือกเมนู ใส่ตัวเลือก แล้วกดยืนยันออเดอร์ ไม่เจอเมนูที่ต้องการรบกวนสั่งที่เคาเตอร์ค่ะ
           </p>
         </div>
+        {cart.length > 0 && (
+  <div className="mb-6 rounded-3xl border-2 border-orange-300 bg-white p-5 shadow">
+    <h2 className="text-2xl font-bold text-orange-900">
+      ตะกร้าออเดอร์
+    </h2>
 
+    <div className="mt-2 flex items-center justify-between text-lg font-bold">
+      <span>{cart.length} รายการ</span>
+      <span>{cartTotal} บาท</span>
+    </div>
+
+    <button
+      onClick={submitOrder}
+      className="mt-4 w-full rounded-xl bg-orange-600 p-4 text-xl font-bold text-white hover:bg-orange-700"
+    >
+      ยืนยันออเดอร์
+    </button>
+  </div>
+)}
         <h2 className="mt-6 text-2xl font-bold">เมนูอาหาร</h2>
         <div className="mt-4 flex gap-2 overflow-x-auto pb-2">
   {[
