@@ -1322,7 +1322,7 @@ if (hasMainProtein && !selectedMainProtein) {
                 {item.options.map((option, index) => (
                   <p key={index}>
                     - {option.name}
-                    {option.price > 0 ? ` +${option.price}` : ""}
+                    
                   </p>
                 ))}
               </div>
