@@ -4,6 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/app/lib/supabase";
 
+type PaidOrderOption = {
+  name?: string;
+  price?: number;
+  groupName?: string;
+  groupId?: string;
+};
+
 type PaidOrder = {
   id: number;
   table_no: string;
@@ -18,6 +25,7 @@ type PaidOrder = {
   cash_received?: number | null;
   change_amount?: number | null;
   created_at: string;
+  options?: PaidOrderOption[] | string | null;
 };
 
 function getItemUnitPrice(item: PaidOrder) {
@@ -33,7 +41,122 @@ function getTableName(tableNo: string) {
   if (tableNo === "takeaway") return "กลับบ้าน";
   return `โต๊ะ ${tableNo}`;
 }
+function normalizeOptionText(value?: string) {
+  return (value || "")
+    .toLowerCase()
+    .replace(/\s+/g, "")
+    .replace(/[()\[\]{}\-_/]/g, "");
+}
 
+function getOrderOptions(item: PaidOrder): PaidOrderOption[] {
+  if (Array.isArray(item.options)) {
+    return item.options;
+  }
+
+  // รองรับกรณี Supabase ส่ง options กลับมาเป็นข้อความ JSON
+  if (typeof item.options === "string") {
+    try {
+      const parsed = JSON.parse(item.options);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+      console.error("อ่าน options ไม่สำเร็จ", error, item.options);
+      return [];
+    }
+  }
+
+  return [];
+}
+
+function getReportMenuName(item: PaidOrder) {
+  const options = getOrderOptions(item);
+
+  // หาเนื้อสัตว์หลักจากชื่อกลุ่มก่อน
+  const mainProteinFromGroup = options.find((option) => {
+    const groupText = normalizeOptionText(
+      `${option.groupName || ""} ${option.groupId || ""}`
+    );
+
+    if (!groupText) return false;
+
+    const isExtraProtein =
+      groupText.includes("เพิ่ม") ||
+      groupText.includes("extra") ||
+      groupText.includes("additional") ||
+      groupText.includes("addprotein");
+
+    if (isExtraProtein) return false;
+
+    return (
+      groupText.includes("เนื้อสัตว์หลัก") ||
+      groupText.includes("เลือกเนื้อสัตว์") ||
+      groupText === "เนื้อสัตว์" ||
+      groupText.includes("mainprotein") ||
+      groupText.includes("proteinmain")
+    );
+  });
+
+  // เผื่อชื่อ groupName ในข้อมูลไม่ตรง ให้หาโดยชื่อหมู/ไก่/ทะเลแทน
+  const proteinKeywords = [
+    "เครื่องในไก่",
+    "หมูกรอบ",
+    "ไก่กรอบ",
+    "หมูตุ๋น",
+    "เนื้อตุ๋น",
+    "หมูสับ",
+    "หมูชิ้น",
+    "เนื้อสับ",
+    "เนื้อชิ้น",
+    "ตับหมู",
+    "ปลาหมึก",
+    "ทะเล",
+    "กุ้ง",
+    "ไก่",
+    "หมู",
+    "เนื้อ",
+    "ตับ",
+  ].map(normalizeOptionText);
+
+  const mainProteinFallback = options.find((option) => {
+    const optionName = normalizeOptionText(option.name);
+    const groupText = normalizeOptionText(
+      `${option.groupName || ""} ${option.groupId || ""}`
+    );
+
+    if (!optionName) return false;
+
+    const isClearlyNotMainProtein =
+      optionName.includes("เพิ่ม") ||
+      groupText.includes("เพิ่ม") ||
+      groupText.includes("extra") ||
+      groupText.includes("additional") ||
+      groupText.includes("เส้น") ||
+      groupText.includes("เผ็ด") ||
+      groupText.includes("ไข่") ||
+      groupText.includes("กับข้าว") ||
+      groupText.includes("ขนาด");
+
+    if (isClearlyNotMainProtein) return false;
+
+    return proteinKeywords.some((keyword) => optionName.includes(keyword));
+  });
+
+  const mainProtein = mainProteinFromGroup || mainProteinFallback;
+  const proteinName = mainProtein?.name?.trim();
+  const baseName = item.name.trim();
+
+  if (!proteinName) {
+    return baseName;
+  }
+
+  // กันชื่อซ้ำ เช่น เมนูเดิมมีคำว่า "หมูกรอบ" อยู่แล้ว
+  if (
+    normalizeOptionText(baseName).includes(normalizeOptionText(proteinName))
+  ) {
+    return baseName;
+  }
+
+  return `${baseName}${proteinName}`;
+}
 export default function TodayReportPage() {
   const [orders, setOrders] = useState<PaidOrder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,7 +171,7 @@ export default function TodayReportPage() {
 
     const { data, error } = await supabase
       .from("orders")
-      .select("*")
+.select("*")
       .eq("paid", true)
       .gte("paid_at", start.toISOString())
       .lt("paid_at", end.toISOString())
@@ -119,7 +242,9 @@ export default function TodayReportPage() {
     >();
 
     orders.forEach((item) => {
-      const existing = map.get(item.name);
+      const menuName = getReportMenuName(item);
+
+      const existing = map.get(menuName);
       const qty = Number(item.qty || 1);
       const total = getItemUnitPrice(item) * qty;
 
@@ -127,8 +252,8 @@ export default function TodayReportPage() {
         existing.qty += qty;
         existing.total += total;
       } else {
-        map.set(item.name, {
-          name: item.name,
+        map.set(menuName, {
+        name: menuName,
           qty,
           total,
         });
@@ -353,7 +478,7 @@ export default function TodayReportPage() {
                             className="flex justify-between gap-3"
                           >
                             <span>
-                              {item.name} x{item.qty}
+                              {getReportMenuName(item)} x{item.qty}
                             </span>
                             <span>
                               {(getItemUnitPrice(item) * item.qty).toFixed(0)}฿

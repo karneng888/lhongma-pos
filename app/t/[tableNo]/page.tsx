@@ -20,7 +20,15 @@ type CartItem = MenuItem & {
   selectedOptions: SelectedOption[];
   itemTotal: number;
 };
+const shouldOpenCustomerOptionGroupByDefault = (groupId: string) => {
+  const defaultClosedGroups = [
+    "add-protein",
+    "spicy",
+    "spicy-level",
+  ];
 
+  return !defaultClosedGroups.includes(groupId);
+};
 export default function TableOrderPage() {
   const params = useParams();
   const tableNo = String(params.tableNo);
@@ -65,12 +73,20 @@ export default function TableOrderPage() {
       : menuItems.filter((item) => item.station === activeCategory);
 
   const openMenu = (item: MenuItem) => {
-    setSelectedMenu(item);
-    setSelectedOptions([]);
-    setOpenOptionGroups({});
-    setNote("");
-    setQty(1);
-  };
+  const defaultOpenGroups: Record<string, boolean> = {};
+
+  item.optionGroups?.forEach((group) => {
+    defaultOpenGroups[group.id] = shouldOpenCustomerOptionGroupByDefault(
+      group.id
+    );
+  });
+
+  setSelectedMenu(item);
+  setSelectedOptions([]);
+  setOpenOptionGroups(defaultOpenGroups);
+  setNote("");
+  setQty(1);
+};
 
   const closeMenu = () => {
     setSelectedMenu(null);
@@ -428,12 +444,12 @@ export default function TableOrderPage() {
           ))}
         </div>
 
-        <div className="mt-4 grid gap-3">
-          {filteredMenuItems.map((item) => (
+        <div className="mt-4 grid grid-cols-2 gap-3">
+  {filteredMenuItems.map((item) => (
             <button
               key={item.id}
               onClick={() => openMenu(item)}
-              className="flex items-center justify-between rounded-xl bg-white p-4 text-left shadow hover:bg-orange-100"
+              className="flex min-h-[120px] flex-col justify-between rounded-xl bg-white p-3 text-left shadow hover:bg-orange-100"
             >
               <div>
                 <p className="text-lg font-bold">{item.name}</p>
@@ -454,8 +470,8 @@ export default function TableOrderPage() {
                 </p>
               </div>
 
-              <p className="text-xl font-bold text-orange-700">
-                {item.price}฿
+              <p className="mt-2 text-xl font-bold text-orange-700">
+              {item.price}฿
               </p>
             </button>
           ))}
@@ -618,7 +634,7 @@ export default function TableOrderPage() {
                   </button>
 
                   {isOpen && (
-                    <div className="grid gap-2 border-t p-3">
+                    <div className="grid grid-cols-3 gap-2 border-t p-3">
                       {availableOptions.length === 0 ? (
                         <p className="rounded-xl bg-red-50 p-3 text-sm font-bold text-red-700">
                           ตัวเลือกในหมวดนี้หมดค่ะ
@@ -638,25 +654,25 @@ export default function TableOrderPage() {
                                   option
                                 )
                               }
-                              className={`flex justify-between rounded-xl border p-3 text-left ${
+                              className={`min-h-[86px] rounded-xl border p-2 text-center ${
                                 selected
                                   ? "border-orange-500 bg-orange-100"
                                   : "bg-white"
                               }`}
                             >
-                              <div>
-                                <p className="font-bold">{option.name}</p>
+                              <div className="flex h-full flex-col items-center justify-center gap-1">
+  <p className="text-sm font-bold leading-tight">{option.name}</p>
 
-                                {option.englishName && (
-                                  <p className="text-xs font-medium text-gray-500">
-                                    {option.englishName}
-                                  </p>
-                                )}
-                              </div>
+  {option.englishName && (
+    <p className="text-[11px] font-medium leading-tight text-gray-500">
+      {option.englishName}
+    </p>
+  )}
 
-                              <span>
-                                {option.price > 0 ? `+${option.price}฿` : "0"}
-                              </span>
+  <span className="text-sm font-bold text-orange-700">
+    {option.price > 0 ? `+${option.price}฿` : "0"}
+  </span>
+</div>
                             </button>
                           );
                         })

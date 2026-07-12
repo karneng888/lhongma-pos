@@ -142,6 +142,8 @@ export default function CashierPage() {
   const [noteDraft, setNoteDraft] = useState("");
 
   const [isAddItemOpen, setIsAddItemOpen] = useState(false);
+  const [isSendingKitchen, setIsSendingKitchen] = useState(false);
+  const [kitchenSendMessage, setKitchenSendMessage] = useState("");
   const [isAddMenuListOpen, setIsAddMenuListOpen] = useState(true);
   const [selectedMenu, setSelectedMenu] = useState<MenuItem | null>(null);
   const [selectedOptions, setSelectedOptions] = useState<SelectedOption[]>([]);
@@ -676,26 +678,33 @@ if (hasMainProtein && !selectedMainProtein) {
   };
     const sendCashierItemsToKitchen = async () => {
   if (!selectedTable) {
-    alert("กรุณาเลือกโต๊ะก่อนค่ะ");
+    setKitchenSendMessage("กรุณาเลือกโต๊ะก่อนค่ะ");
     return;
   }
 
-  const cashierItems = selectedItems.filter(
-    (item) => item.order_source === "cashier" && item.kitchen_printed === true
-  );
+  setIsSendingKitchen(true);
+  setKitchenSendMessage("กำลังส่งรายการเข้าครัว...");
 
-  if (cashierItems.length === 0) {
-    alert("ยังไม่มีรายการที่แคชเชียร์เพิ่มเองรอส่งเข้าครัวค่ะ");
+  const { data: cashierItems, error: loadError } = await supabase
+    .from("orders")
+    .select("id")
+    .eq("table_no", selectedTable)
+    .eq("paid", false)
+    .eq("order_source", "cashier")
+    .eq("kitchen_printed", true);
+
+  if (loadError) {
+    console.error(loadError);
+    setKitchenSendMessage("ส่งเข้าครัวไม่สำเร็จ: " + loadError.message);
+    setIsSendingKitchen(false);
     return;
   }
 
-  const confirmed = confirm(
-    `ต้องการส่งรายการที่แคชเชียร์เพิ่มเอง ${cashierItems.length} รายการ ของ ${getTableName(
-      selectedTable
-    )} เข้าครัวใช่ไหม?`
-  );
-
-  if (!confirmed) return;
+  if (!cashierItems || cashierItems.length === 0) {
+    setKitchenSendMessage("ไม่มีรายการใหม่ที่รอส่งเข้าครัวค่ะ");
+    setIsSendingKitchen(false);
+    return;
+  }
 
   const cashierItemIds = cashierItems.map((item) => item.id);
 
@@ -706,12 +715,26 @@ if (hasMainProtein && !selectedMainProtein) {
 
   if (error) {
     console.error(error);
-    alert("ส่งเข้าครัวไม่สำเร็จ: " + error.message);
+    setKitchenSendMessage("ส่งเข้าครัวไม่สำเร็จ: " + error.message);
+    setIsSendingKitchen(false);
     return;
   }
 
-  alert(`ส่งรายการเข้าครัวแล้ว ${cashierItems.length} รายการค่ะ`);
+  setKitchenSendMessage(`ส่งเข้าครัวแล้ว ${cashierItems.length} รายการค่ะ`);
+
+  setSelectedMenu(null);
+  setSelectedOptions([]);
+  setOpenOptionGroups({});
+  setAddItemNote("");
+  setAddItemQty(1);
+
   await loadOrders();
+
+  setTimeout(() => {
+    setKitchenSendMessage("");
+    setIsSendingKitchen(false);
+    setIsAddItemOpen(false);
+  }, 800);
 };
   const payAndPrint = async () => {
     if (!selectedTable) {
@@ -886,7 +909,7 @@ if (hasMainProtein && !selectedMainProtein) {
                 <div className="flex flex-wrap gap-2">
                   <button
                     onClick={openAddItem}
-                    className="rounded-xl bg-orange-600 px-4 py-3 font-bold text-white hover:bg-orange-700"
+                    className="rounded-xl bg-orange-400 px-4 py-3 font-bold text-white hover:bg-orange-500"
                   >
                     + เพิ่มเมนู
                   </button>
@@ -1070,14 +1093,21 @@ if (hasMainProtein && !selectedMainProtein) {
                   </div>
                 )}
                 <button
-              onClick={sendCashierItemsToKitchen}
-              className="mt-6 w-full rounded-xl bg-purple-600 p-4 text-xl font-bold text-white hover:bg-purple-700"
-              >
-              ส่งรายการที่เพิ่มเองเข้าครัว
-              </button>
+  onClick={sendCashierItemsToKitchen}
+  disabled={isSendingKitchen}
+  className="w-full rounded-xl bg-purple-600 p-4 text-lg font-bold text-white hover:bg-purple-700 disabled:bg-gray-400"
+>
+  {isSendingKitchen ? "กำลังส่งเข้าครัว..." : "ส่งรายการที่เพิ่มเองเข้าครัว"}
+</button>
+
+{kitchenSendMessage && (
+  <p className="mt-2 rounded-xl bg-white p-3 text-center text-sm font-bold text-purple-800">
+    {kitchenSendMessage}
+  </p>
+)}
                 <button
                   onClick={payAndPrint}
-                  className="mt-6 w-full rounded-xl bg-green-600 p-4 text-xl font-bold text-white hover:bg-green-700"
+                  className="mt-6 w-full rounded-xl bg-green-600 p-4 text-xl font-bold text-white hover:bg-green-300"
                 >
                   รับเงินและพิมพ์ใบเสร็จ
                 </button>
@@ -1112,12 +1142,31 @@ if (hasMainProtein && !selectedMainProtein) {
     เพิ่มเมนูให้ครบก่อน แล้วค่อยส่งเข้าครัว
   </p>
 
-  <button
-    onClick={sendCashierItemsToKitchen}
-    className="w-full rounded-xl bg-purple-600 p-4 text-lg font-bold text-white hover:bg-purple-700"
-  >
-    ส่งรายการที่เพิ่มเองเข้าครัว
-  </button>
+  <div className="grid grid-cols-2 gap-2">
+    <button
+      onClick={addItemToTable}
+      disabled={!selectedMenu}
+      className="rounded-xl bg-orange-600 p-4 text-lg font-bold text-white hover:bg-orange-700 disabled:bg-gray-300"
+    >
+      เพิ่มเข้าบิล
+      <span className="block text-sm font-medium">ยังไม่ปริ้น</span>
+    </button>
+
+    <button
+      onClick={sendCashierItemsToKitchen}
+      disabled={isSendingKitchen}
+      className="rounded-xl bg-purple-600 p-4 text-lg font-bold text-white hover:bg-purple-700 disabled:bg-gray-200"
+    >
+      {isSendingKitchen ? "กำลังส่ง..." : "ส่งเข้าครัว"}
+      <span className="block text-sm font-medium">ปริ้นรวม</span>
+    </button>
+  </div>
+
+  {kitchenSendMessage && (
+    <p className="mt-2 rounded-xl bg-white p-3 text-center text-sm font-bold text-purple-800">
+      {kitchenSendMessage}
+    </p>
+  )}
 </div>
             {isAddMenuListOpen ? (
               <div className="mt-5">
@@ -1224,6 +1273,7 @@ if (hasMainProtein && !selectedMainProtein) {
                 >
                   เปลี่ยน / เลือกเมนูเพิ่ม
                 </button>
+                
               </div>
             )}
 
