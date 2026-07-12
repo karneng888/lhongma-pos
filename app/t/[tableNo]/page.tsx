@@ -92,44 +92,51 @@ export default function TableOrderPage() {
   };
 
   const toggleOption = (
-    groupId: string,
-    groupName: string,
-    type: "single" | "multiple",
-    option: MenuOption
-  ) => {
-    const selectedOption: SelectedOption = {
-      id: option.id,
-      name: option.name,
-      price: option.price,
-      groupId,
-      groupName,
-    };
-
-    setSelectedOptions((prev) => {
-      const alreadySelected = prev.some(
-        (item) => item.groupId === groupId && item.id === option.id
-      );
-
-      if (type === "single") {
-        if (alreadySelected) {
-          return prev.filter((item) => item.groupId !== groupId);
-        }
-
-        return [
-          ...prev.filter((item) => item.groupId !== groupId),
-          selectedOption,
-        ];
-      }
-
-      if (alreadySelected) {
-        return prev.filter(
-          (item) => !(item.groupId === groupId && item.id === option.id)
-        );
-      }
-
-      return [...prev, selectedOption];
-    });
+  groupId: string,
+  groupName: string,
+  type: "single" | "multiple",
+  option: MenuOption
+) => {
+  const selectedOption: SelectedOption = {
+    id: option.id,
+    name: option.name,
+    price: option.price,
+    groupId,
+    groupName,
   };
+
+  setSelectedOptions((prev) => {
+    const alreadySelected = prev.some(
+      (item) => item.groupId === groupId && item.id === option.id
+    );
+
+    if (type === "single") {
+      if (alreadySelected) {
+        return prev.filter((item) => item.groupId !== groupId);
+      }
+
+      return [
+        ...prev.filter((item) => item.groupId !== groupId),
+        selectedOption,
+      ];
+    }
+
+    if (alreadySelected) {
+      return prev.filter(
+        (item) => !(item.groupId === groupId && item.id === option.id)
+      );
+    }
+
+    return [...prev, selectedOption];
+  });
+
+  if (type === "single") {
+    setOpenOptionGroups((prev) => ({
+      ...prev,
+      [groupId]: false,
+    }));
+  }
+};
 
   const addSelectedMenuToCart = () => {
     if (!selectedMenu) return;

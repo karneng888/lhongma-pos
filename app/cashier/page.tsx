@@ -142,6 +142,7 @@ export default function CashierPage() {
   const [noteDraft, setNoteDraft] = useState("");
 
   const [isAddItemOpen, setIsAddItemOpen] = useState(false);
+  const [isAddMenuListOpen, setIsAddMenuListOpen] = useState(true);
   const [selectedMenu, setSelectedMenu] = useState<MenuItem | null>(null);
   const [selectedOptions, setSelectedOptions] = useState<SelectedOption[]>([]);
   const [openOptionGroups, setOpenOptionGroups] = useState<Record<string, boolean>>(
@@ -307,6 +308,7 @@ export default function CashierPage() {
     }
 
     setIsAddItemOpen(true);
+    setIsAddMenuListOpen(true);
     setSelectedMenu(null);
     setSelectedOptions([]);
     setAddItemNote("");
@@ -316,6 +318,7 @@ export default function CashierPage() {
 
   const closeAddItem = () => {
     setIsAddItemOpen(false);
+    setIsAddMenuListOpen(true);
     setSelectedMenu(null);
     setSelectedOptions([]);
     setAddItemNote("");
@@ -502,44 +505,51 @@ export default function CashierPage() {
   };
 
   const toggleOption = (
-    groupId: string,
-    groupName: string,
-    type: "single" | "multiple",
-    option: MenuOption
-  ) => {
-    const selectedOption: SelectedOption = {
-      id: option.id,
-      name: option.name,
-      price: option.price,
-      groupId,
-      groupName,
-    };
-
-    setSelectedOptions((prev) => {
-      const alreadySelected = prev.some(
-        (item) => item.groupId === groupId && item.id === option.id
-      );
-
-      if (type === "single") {
-        if (alreadySelected) {
-          return prev.filter((item) => item.groupId !== groupId);
-        }
-
-        return [
-          ...prev.filter((item) => item.groupId !== groupId),
-          selectedOption,
-        ];
-      }
-
-      if (alreadySelected) {
-        return prev.filter(
-          (item) => !(item.groupId === groupId && item.id === option.id)
-        );
-      }
-
-      return [...prev, selectedOption];
-    });
+  groupId: string,
+  groupName: string,
+  type: "single" | "multiple",
+  option: MenuOption
+) => {
+  const selectedOption: SelectedOption = {
+    id: option.id,
+    name: option.name,
+    price: option.price,
+    groupId,
+    groupName,
   };
+
+  setSelectedOptions((prev) => {
+    const alreadySelected = prev.some(
+      (item) => item.groupId === groupId && item.id === option.id
+    );
+
+    if (type === "single") {
+      if (alreadySelected) {
+        return prev.filter((item) => item.groupId !== groupId);
+      }
+
+      return [
+        ...prev.filter((item) => item.groupId !== groupId),
+        selectedOption,
+      ];
+    }
+
+    if (alreadySelected) {
+      return prev.filter(
+        (item) => !(item.groupId === groupId && item.id === option.id)
+      );
+    }
+
+    return [...prev, selectedOption];
+  });
+
+  if (type === "single") {
+    setOpenOptionGroups((prev) => ({
+      ...prev,
+      [groupId]: false,
+    }));
+  }
+};
 
   const addItemToTable = async () => {
     if (!selectedTable) {
@@ -604,7 +614,12 @@ if (hasMainProtein && !selectedMainProtein) {
       return;
     }
 
-    closeAddItem();
+    setSelectedMenu(null);
+    setIsAddMenuListOpen(false);
+    setSelectedOptions([]);
+    setOpenOptionGroups({});
+    setAddItemNote("");
+    setAddItemQty(1);
     await loadOrders();
   };
 
@@ -671,21 +686,29 @@ if (hasMainProtein && !selectedMainProtein) {
     return;
   }
 
+  const cashierItems = selectedItems.filter(
+    (item) => item.order_source === "cashier" && item.kitchen_printed === true
+  );
+
+  if (cashierItems.length === 0) {
+    alert("ยังไม่มีรายการที่แคชเชียร์เพิ่มเองรอส่งเข้าครัวค่ะ");
+    return;
+  }
+
   const confirmed = confirm(
-    `ต้องการส่งรายการที่แคชเชียร์เพิ่มเองของ ${getTableName(
+    `ต้องการส่งรายการที่แคชเชียร์เพิ่มเอง ${cashierItems.length} รายการ ของ ${getTableName(
       selectedTable
     )} เข้าครัวใช่ไหม?`
   );
 
   if (!confirmed) return;
 
+  const cashierItemIds = cashierItems.map((item) => item.id);
+
   const { error } = await supabase
     .from("orders")
     .update({ kitchen_printed: false })
-    .eq("table_no", selectedTable)
-    .eq("paid", false)
-    .eq("order_source", "cashier")
-    .eq("kitchen_printed", true);
+    .in("id", cashierItemIds);
 
   if (error) {
     console.error(error);
@@ -693,7 +716,7 @@ if (hasMainProtein && !selectedMainProtein) {
     return;
   }
 
-  alert("ส่งรายการเข้าครัวแล้วค่ะ");
+  alert(`ส่งรายการเข้าครัวแล้ว ${cashierItems.length} รายการค่ะ`);
   await loadOrders();
 };
   const payAndPrint = async () => {
@@ -1052,7 +1075,12 @@ if (hasMainProtein && !selectedMainProtein) {
                     </div>
                   </div>
                 )}
-
+                <button
+              onClick={sendCashierItemsToKitchen}
+              className="mt-6 w-full rounded-xl bg-purple-600 p-4 text-xl font-bold text-white hover:bg-purple-700"
+              >
+              ส่งรายการที่เพิ่มเองเข้าครัว
+              </button>
                 <button
                   onClick={payAndPrint}
                   className="mt-6 w-full rounded-xl bg-green-600 p-4 text-xl font-bold text-white hover:bg-green-700"
@@ -1085,67 +1113,117 @@ if (hasMainProtein && !selectedMainProtein) {
                 ✕
               </button>
             </div>
+            <div className="mt-4 rounded-2xl bg-purple-50 p-3">
+  <p className="mb-2 text-sm font-bold text-purple-900">
+    เพิ่มเมนูให้ครบก่อน แล้วค่อยส่งเข้าครัว
+  </p>
 
-            <div className="mt-5">
-              <h3 className="font-bold">เลือกหมวดเมนู</h3>
+  <button
+    onClick={sendCashierItemsToKitchen}
+    className="w-full rounded-xl bg-purple-600 p-4 text-lg font-bold text-white hover:bg-purple-700"
+  >
+    ส่งรายการที่เพิ่มเองเข้าครัว
+  </button>
+</div>
+            {isAddMenuListOpen ? (
+              <div className="mt-5">
+                <h3 className="font-bold">เลือกหมวดเมนู</h3>
 
-              <div className="mt-2 flex gap-2 overflow-x-auto pb-2">
-                {[
-                  { id: "noodle", label: "ก๋วยเตี๋ยว" },
-                  { id: "rice", label: "ตามสั่ง" },
-                  { id: "drink", label: "เครื่องดื่ม" },
-                ].map((category) => (
-                  <button
-                    key={category.id}
-                    onClick={() => {
-                      setActiveAddCategory(category.id as AddMenuCategory);
-                      setSelectedMenu(null);
-                      setSelectedOptions([]);
-                      setOpenOptionGroups({});
-                      setAddItemNote("");
-                      setAddItemQty(1);
-                    }}
-                    className={`whitespace-nowrap rounded-full px-4 py-2 font-bold ${
-                      activeAddCategory === category.id
-                        ? "bg-orange-600 text-white"
-                        : "bg-gray-100 text-gray-800"
-                    }`}
-                  >
-                    {category.label}
-                  </button>
-                ))}
+                <div className="mt-2 flex gap-2 overflow-x-auto pb-2">
+                  {[
+                    { id: "noodle", label: "ก๋วยเตี๋ยว" },
+                    { id: "rice", label: "ตามสั่ง" },
+                    { id: "drink", label: "เครื่องดื่ม" },
+                  ].map((category) => (
+                    <button
+                      key={category.id}
+                      onClick={() => {
+                        setActiveAddCategory(category.id as AddMenuCategory);
+                        setSelectedMenu(null);
+                        setSelectedOptions([]);
+                        setOpenOptionGroups({});
+                        setAddItemNote("");
+                        setAddItemQty(1);
+                      }}
+                      className={`whitespace-nowrap rounded-full px-4 py-2 font-bold ${
+                        activeAddCategory === category.id
+                          ? "bg-orange-600 text-white"
+                          : "bg-gray-100 text-gray-800"
+                      }`}
+                    >
+                      {category.label}
+                    </button>
+                  ))}
+                </div>
+
+                <h3 className="mt-4 font-bold">เลือกเมนู</h3>
+
+                <div className="mt-2 grid gap-2">
+                  {filteredAddMenuItems.map((item) => (
+                    <button
+                      key={item.id}
+                      onClick={() => {
+                        setSelectedMenu(item);
+                        setIsAddMenuListOpen(false);
+                        setSelectedOptions([]);
+                        setOpenOptionGroups({});
+                        setAddItemNote("");
+                        setAddItemQty(1);
+                      }}
+                      className={`flex justify-between rounded-xl border p-3 text-left ${
+                        selectedMenu?.id === item.id
+                          ? "border-orange-500 bg-orange-100"
+                          : "bg-white"
+                      }`}
+                    >
+                      <span className="font-bold">{item.name}</span>
+
+                      {item.englishName && (
+                        <p className="mt-1 text-xs font-medium text-gray-500">
+                          {item.englishName}
+                        </p>
+                      )}
+
+                      <span>{item.price}฿</span>
+                    </button>
+                  ))}
+                </div>
               </div>
+            ) : (
+              <div className="mt-5 rounded-2xl border border-orange-300 bg-orange-50 p-4">
+                {selectedMenu ? (
+                  <>
+                    <p className="text-sm font-bold text-orange-800">
+                      เมนูที่เลือก
+                    </p>
+                    <div className="mt-1 flex items-center justify-between gap-3">
+                      <div>
+                        <p className="text-lg font-bold">{selectedMenu.name}</p>
+                        {selectedMenu.englishName && (
+                          <p className="text-xs text-gray-500">
+                            {selectedMenu.englishName}
+                          </p>
+                        )}
+                      </div>
+                      <p className="font-bold text-orange-700">
+                        {selectedMenu.price}฿
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  <p className="font-bold text-gray-600">
+                    เลือกเมนูเพิ่มได้เลยค่ะ
+                  </p>
+                )}
 
-              <h3 className="mt-4 font-bold">เลือกเมนู</h3>
-
-              <div className="mt-2 grid gap-2">
-                {filteredAddMenuItems.map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => {
-                      setSelectedMenu(item);
-                      setSelectedOptions([]);
-                      setOpenOptionGroups({});
-                      setAddItemNote("");
-                      setAddItemQty(1);
-                    }}
-                    className={`flex justify-between rounded-xl border p-3 text-left ${
-                      selectedMenu?.id === item.id
-                        ? "border-orange-500 bg-orange-100"
-                        : "bg-white"
-                    }`}
-                  >
-                    <span className="font-bold">{item.name}</span>
-                    {item.englishName && (
-    <p className="mt-1 text-xs font-medium text-gray-500">
-      {item.englishName}
-    </p>
-  )}
-                    <span>{item.price}฿</span>
-                  </button>
-                ))}
+                <button
+                  onClick={() => setIsAddMenuListOpen(true)}
+                  className="mt-3 w-full rounded-xl bg-white p-3 font-bold text-orange-700 shadow"
+                >
+                  เปลี่ยน / เลือกเมนูเพิ่ม
+                </button>
               </div>
-            </div>
+            )}
 
             {selectedMenu && (
               <>
@@ -1282,7 +1360,7 @@ if (hasMainProtein && !selectedMainProtein) {
                   onClick={addItemToTable}
                   className="mt-5 w-full rounded-xl bg-orange-600 p-4 text-xl font-bold text-white hover:bg-orange-700"
                 >
-                  เพิ่มเข้าบิล
+                  เพิ่มเข้าบิล ยังไม่ปริ้น
                 </button>
               </>
             )}
