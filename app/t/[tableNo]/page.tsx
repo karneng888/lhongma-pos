@@ -27,17 +27,25 @@ export default function TableOrderPage() {
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [selectedMenu, setSelectedMenu] = useState<MenuItem | null>(null);
-  const [activeCategory, setActiveCategory] = useState<"all" | "noodle" | "rice" | "drink">("all");
+  const [activeCategory, setActiveCategory] = useState<
+    "all" | "noodle" | "rice" | "drink"
+  >("all");
   const [selectedOptions, setSelectedOptions] = useState<SelectedOption[]>([]);
-  const [openOptionGroups, setOpenOptionGroups] = useState<Record<string, boolean>>(
-    {}
-  );
+  const [openOptionGroups, setOpenOptionGroups] = useState<
+    Record<string, boolean>
+  >({});
   const [note, setNote] = useState("");
   const [qty, setQty] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Table session
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [isSessionLoading, setIsSessionLoading] = useState(true);
+  const [isSessionBlocked, setIsSessionBlocked] = useState(false);
+
   const [optionStatusMap, setOptionStatusMap] = useState<Map<string, boolean>>(
-  new Map()
-);
+    new Map()
+  );
 
   const optionTotal = selectedOptions.reduce(
     (sum, option) => sum + option.price,
@@ -50,10 +58,11 @@ export default function TableOrderPage() {
     (sum, item) => sum + item.itemTotal * item.qty,
     0
   );
+
   const filteredMenuItems =
     activeCategory === "all"
-     ? menuItems
-     : menuItems.filter((item) => item.station === activeCategory);
+      ? menuItems
+      : menuItems.filter((item) => item.station === activeCategory);
 
   const openMenu = (item: MenuItem) => {
     setSelectedMenu(item);
@@ -124,18 +133,20 @@ export default function TableOrderPage() {
 
   const addSelectedMenuToCart = () => {
     if (!selectedMenu) return;
+
     const hasMainProtein = selectedMenu.optionGroups?.some(
-    (group) => group.id === "main-protein"
-  );
+      (group) => group.id === "main-protein"
+    );
 
-  const selectedMainProtein = selectedOptions.some(
-    (option) => option.groupId === "main-protein"
-  );
+    const selectedMainProtein = selectedOptions.some(
+      (option) => option.groupId === "main-protein"
+    );
 
-  if (hasMainProtein && !selectedMainProtein) {
-    alert("กรุณาเลือกเนื้อสัตว์หลักก่อนค่ะ");
-    return;
-  }
+    if (hasMainProtein && !selectedMainProtein) {
+      alert("กรุณาเลือกเนื้อสัตว์หลักก่อนค่ะ");
+      return;
+    }
+
     const newCartItem: CartItem = {
       ...selectedMenu,
       cartId: `${selectedMenu.id}-${Date.now()}`,
@@ -166,9 +177,65 @@ export default function TableOrderPage() {
     );
   };
 
+  const loadTableSession = async () => {
+    setIsSessionLoading(true);
+
+    const { data, error } = await supabase
+      .from("table_sessions")
+      .select("*")
+      .eq("table_no", tableNo)
+      .eq("status", "active")
+      .order("opened_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.error(error);
+      alert("โหลดข้อมูลโต๊ะไม่สำเร็จค่ะ");
+      setIsSessionLoading(false);
+      return;
+    }
+
+    if (!data) {
+      setIsSessionBlocked(true);
+      setCurrentSessionId(null);
+      setIsSessionLoading(false);
+      return;
+    }
+
+    const storageKey = `lhongma-table-session-${tableNo}`;
+    const savedSessionId = localStorage.getItem(storageKey);
+
+    // มือถือเครื่องนี้เพิ่งสแกนโต๊ะนี้ครั้งแรก ให้จำ session ปัจจุบันไว้
+    if (!savedSessionId) {
+      localStorage.setItem(storageKey, data.id);
+      setCurrentSessionId(data.id);
+      setIsSessionBlocked(false);
+      setIsSessionLoading(false);
+      return;
+    }
+
+    // ถ้า session ในมือถือไม่ตรงกับ session ปัจจุบัน แปลว่าเป็นบิลเก่า
+    if (savedSessionId !== data.id) {
+      setIsSessionBlocked(true);
+      setCurrentSessionId(null);
+      setIsSessionLoading(false);
+      return;
+    }
+
+    setCurrentSessionId(data.id);
+    setIsSessionBlocked(false);
+    setIsSessionLoading(false);
+  };
+
   const submitOrder = async () => {
     if (cart.length === 0) {
       alert("กรุณาเลือกเมนูก่อนค่ะ");
+      return;
+    }
+
+    if (isSessionBlocked || !currentSessionId) {
+      alert("บิลนี้ปิดแล้วค่ะ กรุณาติดต่อพนักงาน");
       return;
     }
 
@@ -176,6 +243,7 @@ export default function TableOrderPage() {
 
     const newOrders = cart.map((item) => ({
       table_no: tableNo,
+      session_id: currentSessionId,
       name: item.name,
       price: item.price,
       qty: item.qty,
@@ -204,28 +272,57 @@ export default function TableOrderPage() {
     alert("ส่งออเดอร์เรียบร้อยค่ะ");
     setCart([]);
   };
-  const loadOptionStatus = async () => {
-  const { data, error } = await supabase
-    .from("option_status")
-    .select("*");
 
-  if (error) {
-    console.error(error);
-    return;
+  const loadOptionStatus = async () => {
+    const { data, error } = await supabase.from("option_status").select("*");
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    const map = new Map<string, boolean>();
+
+    (data || []).forEach((item) => {
+      map.set(item.option_id, item.is_available);
+    });
+
+    setOptionStatusMap(map);
+  };
+
+  useEffect(() => {
+    loadOptionStatus();
+    loadTableSession();
+  }, []);
+
+  if (isSessionLoading) {
+    return (
+      <main className="min-h-screen bg-orange-50 p-4">
+        <div className="mx-auto max-w-3xl rounded-3xl bg-white p-6 text-center shadow">
+          <h1 className="text-2xl font-bold text-orange-900">
+            กำลังโหลดโต๊ะ...
+          </h1>
+          <p className="mt-2 text-gray-500">กรุณารอสักครู่ค่ะ</p>
+        </div>
+      </main>
+    );
   }
 
-  const map = new Map<string, boolean>();
+  if (isSessionBlocked) {
+    return (
+      <main className="min-h-screen bg-orange-50 p-4">
+        <div className="mx-auto max-w-3xl rounded-3xl bg-white p-6 text-center shadow">
+          <h1 className="text-2xl font-bold text-red-700">
+            บิลนี้ปิดแล้วค่ะ
+          </h1>
+          <p className="mt-3 text-gray-600">
+            หากต้องการสั่งอาหาร กรุณาสแกน QR ที่โต๊ะอีกครั้ง หรือติดต่อพนักงานค่ะ
+          </p>
+        </div>
+      </main>
+    );
+  }
 
-  (data || []).forEach((item) => {
-    map.set(item.option_id, item.is_available);
-  });
-
-  setOptionStatusMap(map);
-};
-
-useEffect(() => {
-  loadOptionStatus();
-}, []);
   return (
     <main className="min-h-screen bg-orange-50 p-4">
       <div className="mx-auto max-w-3xl">
@@ -233,53 +330,58 @@ useEffect(() => {
           <h1 className="text-3xl font-bold text-orange-900">ร้านหลงมา</h1>
           <p className="mt-1 text-lg text-gray-700">โต๊ะ {tableNo}</p>
           <p className="text-sm text-gray-500">
-            เลือกเมนู ใส่ตัวเลือก แล้วกดยืนยันออเดอร์ ไม่เจอเมนูที่ต้องการรบกวนสั่งที่เคาเตอร์ค่ะ
+            เลือกเมนู ใส่ตัวเลือก แล้วกดยืนยันออเดอร์
+            ไม่เจอเมนูที่ต้องการรบกวนสั่งที่เคาเตอร์ค่ะ
           </p>
         </div>
+
         {cart.length > 0 && (
-  <div className="mb-6 rounded-3xl border-2 border-orange-300 bg-white p-5 shadow">
-    <h2 className="text-2xl font-bold text-orange-900">
-      ตะกร้าออเดอร์
-    </h2>
+          <div className="mb-6 mt-4 rounded-3xl border-2 border-orange-300 bg-white p-5 shadow">
+            <h2 className="text-2xl font-bold text-orange-900">
+              ตะกร้าออเดอร์
+            </h2>
 
-    <div className="mt-2 flex items-center justify-between text-lg font-bold">
-      <span>{cart.length} รายการ</span>
-      <span>{cartTotal} บาท</span>
-    </div>
+            <div className="mt-2 flex items-center justify-between text-lg font-bold">
+              <span>{cart.length} รายการ</span>
+              <span>{cartTotal} บาท</span>
+            </div>
 
-    <button
-      onClick={submitOrder}
-      className="mt-4 w-full rounded-xl bg-orange-600 p-4 text-xl font-bold text-white hover:bg-orange-700"
-    >
-      ยืนยันออเดอร์
-    </button>
-  </div>
-)}
+            <button
+              onClick={submitOrder}
+              disabled={isSubmitting}
+              className="mt-4 w-full rounded-xl bg-orange-600 p-4 text-xl font-bold text-white hover:bg-orange-700 disabled:bg-gray-400"
+            >
+              {isSubmitting ? "กำลังส่งออเดอร์..." : "ยืนยันออเดอร์"}
+            </button>
+          </div>
+        )}
+
         <h2 className="mt-6 text-2xl font-bold">เมนูอาหาร</h2>
+
         <div className="mt-4 flex gap-2 overflow-x-auto pb-2">
-  {[
-    { id: "all", label: "ทั้งหมด" },
-    { id: "noodle", label: "ก๋วยเตี๋ยว-Noodles" },
-    { id: "rice", label: "ตามสั่ง-Stir fried" },
-    { id: "drink", label: "เครื่องดื่ม-Beverage" },
-  ].map((category) => (
-    <button
-      key={category.id}
-      onClick={() =>
-        setActiveCategory(
-          category.id as "all" | "noodle" | "rice" | "drink"
-        )
-      }
-      className={`whitespace-nowrap rounded-full px-4 py-2 font-bold ${
-        activeCategory === category.id
-          ? "bg-orange-600 text-white"
-          : "bg-white text-gray-800 shadow"
-      }`}
-    >
-      {category.label}
-    </button>
-  ))}
-</div>
+          {[
+            { id: "all", label: "ทั้งหมด" },
+            { id: "noodle", label: "ก๋วยเตี๋ยว-Noodles" },
+            { id: "rice", label: "ตามสั่ง-Stir fried" },
+            { id: "drink", label: "เครื่องดื่ม-Beverage" },
+          ].map((category) => (
+            <button
+              key={category.id}
+              onClick={() =>
+                setActiveCategory(
+                  category.id as "all" | "noodle" | "rice" | "drink"
+                )
+              }
+              className={`whitespace-nowrap rounded-full px-4 py-2 font-bold ${
+                activeCategory === category.id
+                  ? "bg-orange-600 text-white"
+                  : "bg-white text-gray-800 shadow"
+              }`}
+            >
+              {category.label}
+            </button>
+          ))}
+        </div>
 
         <div className="mt-4 grid gap-3">
           {filteredMenuItems.map((item) => (
@@ -290,13 +392,14 @@ useEffect(() => {
             >
               <div>
                 <p className="text-lg font-bold">{item.name}</p>
+
                 {item.englishName && (
-                <p className="mt-1 text-xs font-medium text-gray-500">
-                {item.englishName}
-                </p>
-              )}
+                  <p className="mt-1 text-xs font-medium text-gray-500">
+                    {item.englishName}
+                  </p>
+                )}
+
                 <p className="text-sm text-gray-500">
-                  
                   หมวด:{" "}
                   {item.station === "noodle"
                     ? "ก๋วยเตี๋ยว"
@@ -331,7 +434,9 @@ useEffect(() => {
                       {item.selectedOptions.length > 0 && (
                         <div className="mt-1 text-sm text-gray-600">
                           {item.selectedOptions.map((option) => (
-                            <p key={`${item.cartId}-${option.groupId}-${option.id}`}>
+                            <p
+                              key={`${item.cartId}-${option.groupId}-${option.id}`}
+                            >
                               + {option.name}
                               {option.price > 0 ? ` ${option.price}฿` : ""}
                             </p>
@@ -438,17 +543,19 @@ useEffect(() => {
                   >
                     <div>
                       <h3 className="text-lg font-bold">{group.name}</h3>
+
                       {group.englishName && (
-                      <p className="text-sm font-medium text-gray-500">
-                      {group.englishName}
-                     </p>
+                        <p className="text-sm font-medium text-gray-500">
+                          {group.englishName}
+                        </p>
                       )}
-                      
+
                       <p className="text-sm text-gray-500">
                         {group.type === "single"
                           ? "เลือกได้ 1 อย่าง"
                           : "เลือกได้หลายอย่าง"}
                       </p>
+
                       <p
                         className={`mt-1 text-sm ${
                           selectedInGroup.length > 0
@@ -493,15 +600,16 @@ useEffect(() => {
                               }`}
                             >
                               <div>
-                          <p className="font-bold">{option.name}</p>
+                                <p className="font-bold">{option.name}</p>
 
-                    {option.englishName && (
-                    <p className="text-xs font-medium text-gray-500">
-                    {option.englishName}
-                   </p>
-                )}
-                </div>
-                  <span>
+                                {option.englishName && (
+                                  <p className="text-xs font-medium text-gray-500">
+                                    {option.englishName}
+                                  </p>
+                                )}
+                              </div>
+
+                              <span>
                                 {option.price > 0 ? `+${option.price}฿` : "0"}
                               </span>
                             </button>
@@ -556,7 +664,7 @@ useEffect(() => {
               className="mt-5 w-full rounded-xl bg-orange-600 p-4 text-xl font-bold text-white hover:bg-orange-700"
             >
               <span className="block">เพิ่มลงตะกร้า</span>
-<span className="block text-sm font-medium">Add to Cart</span>
+              <span className="block text-sm font-medium">Add to Cart</span>
             </button>
           </div>
         </div>

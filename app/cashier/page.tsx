@@ -21,10 +21,18 @@ type SelectedOption = {
   groupId: string;
   groupName: string;
 };
-
+type CustomMenuItem = {
+  id: number;
+  name: string;
+  price: number;
+  station: Station;
+  note?: string | null;
+  is_active: boolean;
+};
 type OrderItem = {
   id: number;
   table_no: string;
+  session_id?: string | null;
   name: string;
   price: number;
   qty: number;
@@ -56,6 +64,70 @@ function getTableName(tableNo: string) {
   return `โต๊ะ ${tableNo}`;
 }
 
+async function getOrCreateActiveSessionId(tableNo: string) {
+  if (!tableNo || tableNo.startsWith("takeaway-") || tableNo === "takeaway") {
+    return null;
+  }
+
+  const { data: activeSession, error: selectError } = await supabase
+    .from("table_sessions")
+    .select("id")
+    .eq("table_no", tableNo)
+    .eq("status", "active")
+    .order("opened_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (selectError) {
+    throw selectError;
+  }
+
+  if (activeSession?.id) {
+    return activeSession.id as string;
+  }
+
+  const { data: newSession, error: insertError } = await supabase
+    .from("table_sessions")
+    .insert([{ table_no: tableNo, status: "active" }])
+    .select("id")
+    .single();
+
+  if (insertError) {
+    throw insertError;
+  }
+
+  return newSession.id as string;
+}
+
+async function closeAndCreateNewSession(tableNo: string) {
+  if (!tableNo || tableNo.startsWith("takeaway-") || tableNo === "takeaway") {
+    return;
+  }
+
+  const now = new Date().toISOString();
+
+  const { error: closeError } = await supabase
+    .from("table_sessions")
+    .update({
+      status: "closed",
+      closed_at: now,
+    })
+    .eq("table_no", tableNo)
+    .eq("status", "active");
+
+  if (closeError) {
+    throw closeError;
+  }
+
+  const { error: insertError } = await supabase
+    .from("table_sessions")
+    .insert([{ table_no: tableNo, status: "active" }]);
+
+  if (insertError) {
+    throw insertError;
+  }
+}
+
 export default function CashierPage() {
   const [orders, setOrders] = useState<OrderItem[]>([]);
   const [selectedTable, setSelectedTable] = useState<string>("");
@@ -82,7 +154,8 @@ export default function CashierPage() {
   const [customItemQty, setCustomItemQty] = useState(1);
   const [customItemStation, setCustomItemStation] = useState<Station>("rice");
   const [customItemNote, setCustomItemNote] = useState("");
-
+  const [customMenuItems, setCustomMenuItems] = useState<CustomMenuItem[]>([]);
+  const [rememberCustomItem, setRememberCustomItem] = useState(false);
   const [isMoveTableOpen, setIsMoveTableOpen] = useState(false);
   const [targetTable, setTargetTable] = useState("");
 
@@ -139,7 +212,20 @@ export default function CashierPage() {
 
     setOptionStatusMap(map);
   };
+  const loadCustomMenuItems = async () => {
+  const { data, error } = await supabase
+    .from("custom_menu_items")
+    .select("*")
+    .eq("is_active", true)
+    .order("created_at", { ascending: false });
 
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  setCustomMenuItems((data || []) as CustomMenuItem[]);
+};
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tableFromUrl = params.get("table");
@@ -152,6 +238,7 @@ export default function CashierPage() {
   useEffect(() => {
     loadOrders();
     loadOptionStatus();
+    loadCustomMenuItems();
 
     const timer = setInterval(() => {
       loadOrders();
@@ -245,6 +332,7 @@ export default function CashierPage() {
     setCustomItemQty(1);
     setCustomItemStation("rice");
     setCustomItemNote("");
+    setRememberCustomItem(false);
   };
 
   const closeCustomItem = () => {
@@ -254,6 +342,7 @@ export default function CashierPage() {
     setCustomItemQty(1);
     setCustomItemStation("rice");
     setCustomItemNote("");
+    setRememberCustomItem(false);
   };
 
   const openMoveTable = () => {
@@ -313,7 +402,12 @@ export default function CashierPage() {
     closeMoveTable();
     await loadOrders();
   };
-
+    const selectSavedCustomItem = (item: CustomMenuItem) => {
+  setCustomItemName(item.name);
+  setCustomItemPrice(Number(item.price));
+  setCustomItemStation(item.station);
+  setCustomItemNote(item.note || "");
+  };
   const addCustomItemToTable = async () => {
     if (!selectedTable) {
       alert("กรุณาเลือกโต๊ะก่อนค่ะ");
@@ -330,8 +424,19 @@ export default function CashierPage() {
       return;
     }
 
+    let activeSessionId: string | null = null;
+
+    try {
+      activeSessionId = await getOrCreateActiveSessionId(selectedTable);
+    } catch (error: any) {
+      console.error(error);
+      alert("เปิดรอบโต๊ะไม่สำเร็จ: " + error.message);
+      return;
+    }
+
     const newOrder = {
       table_no: selectedTable,
+      session_id: activeSessionId,
       name: customItemName.trim(),
       price: customItemPrice,
       qty: customItemQty,
@@ -350,7 +455,35 @@ export default function CashierPage() {
       alert("เพิ่มรายการเองไม่สำเร็จ: " + error.message);
       return;
     }
+      if (rememberCustomItem) {
+  const alreadyExists = customMenuItems.some(
+    (item) =>
+      item.name.trim() === customItemName.trim() &&
+      Number(item.price) === Number(customItemPrice) &&
+      item.station === customItemStation
+  );
 
+  if (!alreadyExists) {
+    const { error: saveError } = await supabase
+      .from("custom_menu_items")
+      .insert([
+        {
+          name: customItemName.trim(),
+          price: customItemPrice,
+          station: customItemStation,
+          note: customItemNote || null,
+          is_active: true,
+        },
+      ]);
+
+    if (saveError) {
+      console.error(saveError);
+      alert("เพิ่มรายการเข้าบิลแล้ว แต่บันทึกเมนูไว้ใช้ครั้งหน้าไม่สำเร็จค่ะ");
+    } else {
+      await loadCustomMenuItems();
+    }
+  }
+}
     closeCustomItem();
     await loadOrders();
   };
@@ -429,8 +562,19 @@ if (hasMainProtein && !selectedMainProtein) {
   return;
 }
 
+    let activeSessionId: string | null = null;
+
+    try {
+      activeSessionId = await getOrCreateActiveSessionId(selectedTable);
+    } catch (error: any) {
+      console.error(error);
+      alert("เปิดรอบโต๊ะไม่สำเร็จ: " + error.message);
+      return;
+    }
+
     const newOrder = {
       table_no: selectedTable,
+      session_id: activeSessionId,
       name: selectedMenu.name,
       price: selectedMenu.price,
       qty: addItemQty,
@@ -556,6 +700,16 @@ if (hasMainProtein && !selectedMainProtein) {
       console.error(error);
       alert("รับเงินไม่สำเร็จ: " + error.message);
       return;
+    }
+
+    try {
+      await closeAndCreateNewSession(selectedTable);
+    } catch (sessionError: any) {
+      console.error(sessionError);
+      alert(
+        "รับเงินสำเร็จแล้ว แต่เปิดรอบโต๊ะใหม่ไม่สำเร็จ: " +
+          sessionError.message
+      );
     }
 
     setLastReceipt({
@@ -1120,7 +1274,31 @@ if (hasMainProtein && !selectedMainProtein) {
                 ✕
               </button>
             </div>
+            {customMenuItems.length > 0 && (
+  <div className="mt-5">
+    <h3 className="font-bold">รายการที่เคยใช้</h3>
 
+    <div className="mt-2 flex gap-2 overflow-x-auto pb-2">
+      {customMenuItems.map((item) => (
+        <button
+          key={item.id}
+          onClick={() => selectSavedCustomItem(item)}
+          className="whitespace-nowrap rounded-xl bg-orange-100 px-4 py-3 text-left font-bold text-orange-900"
+        >
+          <span className="block">{item.name}</span>
+          <span className="block text-sm text-orange-700">
+            {Number(item.price)} บาท ·{" "}
+            {item.station === "rice"
+              ? "ตามสั่ง"
+              : item.station === "noodle"
+              ? "ก๋วยเตี๋ยว"
+              : "เครื่องดื่ม"}
+          </span>
+        </button>
+      ))}
+    </div>
+  </div>
+)}
             <div className="mt-5">
               <label className="font-bold">ชื่อรายการ</label>
               <input
@@ -1205,7 +1383,15 @@ if (hasMainProtein && !selectedMainProtein) {
               <span>รวมรายการนี้</span>
               <span>{customItemPrice * customItemQty} บาท</span>
             </div>
-
+                  <label className="mt-5 flex items-center gap-3 rounded-xl bg-gray-50 p-3 font-bold">
+  <input
+    type="checkbox"
+    checked={rememberCustomItem}
+    onChange={(e) => setRememberCustomItem(e.target.checked)}
+    className="h-5 w-5"
+  />
+  <span>จำเมนูนี้ไว้ใช้ครั้งหน้า</span>
+</label>
             <button
               onClick={addCustomItemToTable}
               className="mt-5 w-full rounded-xl bg-yellow-400 px-4 py-3 font-bold text-gray-950 shadow hover:bg-yellow-500"
