@@ -44,6 +44,25 @@ const mainProteinOptions: MenuOptionGroup = {
   ],
 };
 
+const mainProteinOptionsSuki: MenuOptionGroup = {
+  id: "main-protein",
+  name: "เลือกเนื้อสัตว์หลัก",
+  englishName: "Main Protein",
+  type: "single",
+  options: [
+    { id: "minced-pork", name: "หมูสับ", englishName: "Minced Pork", price: 10 },
+    { id: "sliced-pork", name: "หมูชิ้น", englishName: "Sliced Pork", price: 10 },
+    { id: "chicken", name: "ไก่", englishName: "Chicken", price: 0 },
+    { id: "chicken-organs", name: "เครื่องในไก่", englishName: "Chicken Giblets", price: 10 },
+    { id: "crispy-pork", name: "หมูกรอบ", englishName: "Crispy Pork",  price: 15 },
+    { id: "seafood", name: "ทะเล", englishName: "Seafood",  price: 15 },
+    { id: "minced-beef", name: "เนื้อสับ", englishName: "Minced Beef",  price: 10 },
+    { id: "sliced-beef", name: "เนื้อชิ้น", englishName: "Sliced Beef",  price: 10 },
+    { id: "stewed-pork", name: "หมูตุ๋น", englishName: "Braised pork", price: 10 },
+    { id: "stewed-beef", name: "เนื้อตุ๋น", englishName: "Braised beef", price: 10 },
+  ],
+};
+
 const Noodlesprotain: MenuOptionGroup = {
   id: "main-protein",
   name: "เลือกเนื้อสัตว์หลัก",
@@ -195,7 +214,7 @@ const riceSimpleOptions: MenuOptionGroup[] = [
 
 // ใช้กับสุกี้ อาจเลือกเนื้อสัตว์ได้ แต่ไม่มีไข่ / ไม่มีเป็นกับข้าว / ไม่มีระดับเผ็ด
 const sukiOptions: MenuOptionGroup[] = [
-  mainProteinOptions,
+  mainProteinOptionsSuki,
   addProteinOptions,
   takeawayOptions,
 ];
@@ -561,7 +580,7 @@ export const menuItems: MenuItem[] = [
     id: 58,
     name: "ข้าวผัด",
     englishName: "Fried Rice",
-    price: 60,
+    price: 50,
     station: "rice",
     optionGroups: riceNoSpicyOptions,
   },
@@ -569,7 +588,7 @@ export const menuItems: MenuItem[] = [
     id: 65,
     name: "สุกี้น้ำ",
     englishName: "Sukiyaki with Soup",
-    price: 60,
+    price: 50,
     station: "rice",
     optionGroups: sukiOptions,
   },
@@ -577,7 +596,7 @@ export const menuItems: MenuItem[] = [
     id: 66,
     name: "สุกี้แห้ง",
     englishName: "Stir-fried Sukiyaki (Dry)",
-    price: 60,
+    price: 50,
     station: "rice",
     optionGroups: sukiOptions,
   },
@@ -585,17 +604,17 @@ export const menuItems: MenuItem[] = [
     id: 67,
     name: "เส้นใหญ่ผัดซีอิ๊ว",
     englishName: "Stir-fried Large Rice Noodles with Soy Sauce (Pad See Ew)",
-    price: 60,
+    price: 50,
     station: "rice",
-    optionGroups: riceSimpleOptions,
+    optionGroups: sukiOptions,
   },
   {
     id: 68,
     name: "เส้นหมี่ผัดซีอิ๊ว",
     englishName: "Stir-fried Rice Vermicelli with Soy Sauce (Pad See Ew)",
-    price: 60,
+    price: 50,
     station: "rice",
-    optionGroups: riceSimpleOptions,
+    optionGroups: sukiOptions,
   },
   {
     id: 69,
