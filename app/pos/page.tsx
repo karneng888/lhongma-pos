@@ -22,13 +22,13 @@ const tableLayout = [
   { tableNo: "2", left: "8%", top: "26%" },
   { tableNo: "3", left: "8%", top: "44%" },
   { tableNo: "4", left: "8%", top: "62%" },
-  { tableNo: "5", left: "8%", top: "80%" },
+  //{ tableNo: "5", left: "8%", top: "80%" },
 
-  { tableNo: "7", left: "40%", top: "35%" },
-  { tableNo: "6", left: "40%", top: "60%" },
+  { tableNo: "6", left: "40%", top: "20%" },
+  { tableNo: "7", left: "40%", top: "40%" },
 
-  { tableNo: "8", left: "70%", top: "35%" },
-  { tableNo: "9", left: "70%", top: "60%" },
+  { tableNo: "8", left: "40%", top: "61%" },
+  { tableNo: "9", left: "40%", top: "82%" },
 ];
 
 function getTableName(tableNo: string) {
