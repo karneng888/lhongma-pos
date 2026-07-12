@@ -178,55 +178,93 @@ export default function TableOrderPage() {
   };
 
   const loadTableSession = async () => {
-    setIsSessionLoading(true);
+  setIsSessionLoading(true);
 
-    const { data, error } = await supabase
-      .from("table_sessions")
-      .select("*")
-      .eq("table_no", tableNo)
-      .eq("status", "active")
-      .order("opened_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+  const { data, error } = await supabase
+    .from("table_sessions")
+    .select("*")
+    .eq("table_no", tableNo)
+    .eq("status", "active")
+    .order("opened_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
-    if (error) {
-      console.error(error);
-      alert("โหลดข้อมูลโต๊ะไม่สำเร็จค่ะ");
-      setIsSessionLoading(false);
-      return;
-    }
+  if (error) {
+    console.error(error);
+    alert("โหลดข้อมูลโต๊ะไม่สำเร็จค่ะ");
+    setIsSessionLoading(false);
+    return;
+  }
 
-    if (!data) {
-      setIsSessionBlocked(true);
-      setCurrentSessionId(null);
-      setIsSessionLoading(false);
-      return;
-    }
+  if (!data) {
+    setIsSessionBlocked(true);
+    setCurrentSessionId(null);
+    setIsSessionLoading(false);
+    return;
+  }
 
-    const storageKey = `lhongma-table-session-${tableNo}`;
-    const savedSessionId = localStorage.getItem(storageKey);
+  const storageKey = `lhongma-table-session-${tableNo}`;
+  const savedText = localStorage.getItem(storageKey);
 
-    // มือถือเครื่องนี้เพิ่งสแกนโต๊ะนี้ครั้งแรก ให้จำ session ปัจจุบันไว้
-    if (!savedSessionId) {
-      localStorage.setItem(storageKey, data.id);
-      setCurrentSessionId(data.id);
-      setIsSessionBlocked(false);
-      setIsSessionLoading(false);
-      return;
-    }
+  const now = Date.now();
+  const allowNewSessionAfterMs = 12 * 60 * 60 * 1000; // 12 ชั่วโมง
 
-    // ถ้า session ในมือถือไม่ตรงกับ session ปัจจุบัน แปลว่าเป็นบิลเก่า
-    if (savedSessionId !== data.id) {
-      setIsSessionBlocked(true);
-      setCurrentSessionId(null);
-      setIsSessionLoading(false);
-      return;
-    }
+  if (!savedText) {
+    localStorage.setItem(
+      storageKey,
+      JSON.stringify({
+        sessionId: data.id,
+        savedAt: now,
+      })
+    );
 
     setCurrentSessionId(data.id);
     setIsSessionBlocked(false);
     setIsSessionLoading(false);
-  };
+    return;
+  }
+
+  let savedSessionId = "";
+  let savedAt = 0;
+
+  try {
+    const savedData = JSON.parse(savedText);
+    savedSessionId = savedData.sessionId;
+    savedAt = savedData.savedAt || 0;
+  } catch {
+    savedSessionId = savedText;
+    savedAt = 0;
+  }
+
+  const isOldEnoughToReset =
+    savedAt === 0 || now - savedAt > allowNewSessionAfterMs;
+
+  if (savedSessionId !== data.id && !isOldEnoughToReset) {
+    setIsSessionBlocked(true);
+    setCurrentSessionId(null);
+    setIsSessionLoading(false);
+    return;
+  }
+
+  if (savedSessionId !== data.id && isOldEnoughToReset) {
+    localStorage.setItem(
+      storageKey,
+      JSON.stringify({
+        sessionId: data.id,
+        savedAt: now,
+      })
+    );
+
+    setCurrentSessionId(data.id);
+    setIsSessionBlocked(false);
+    setIsSessionLoading(false);
+    return;
+  }
+
+  setCurrentSessionId(data.id);
+  setIsSessionBlocked(false);
+  setIsSessionLoading(false);
+};
 
   const submitOrder = async () => {
     if (cart.length === 0) {
