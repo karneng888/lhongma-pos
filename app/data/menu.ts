@@ -535,6 +535,14 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 55,
+    name: "ข้าวผัดคะน้า",
+    englishName: "Stir-fried Holy Basil with Bamboo Shoots and Rice",
+    price: 45,
+    station: "rice",
+    optionGroups: riceSpicyOptions,
+  },
+  {
+    id: 56,
     name: "ข้าวพริกสด",
     englishName: "Stir-fried Chili with Rice",
     price: 45,
@@ -542,7 +550,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: riceNoSpicyOptions,
   },
   {
-    id: 56,
+    id: 57,
     name: "ข้าวคั่วพริกเกลือ",
     englishName: "Stir-fried Chili and Salt with Rice",
     price: 45,
@@ -550,7 +558,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: riceSpicyOptions,
   },
   {
-    id: 57,
+    id: 58,
     name: "ข้าวผัด",
     englishName: "Fried Rice",
     price: 60,
@@ -558,7 +566,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: riceNoSpicyOptions,
   },
   {
-    id: 58,
+    id: 65,
     name: "สุกี้น้ำ",
     englishName: "Sukiyaki with Soup",
     price: 60,
@@ -566,7 +574,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: sukiOptions,
   },
   {
-    id: 59,
+    id: 66,
     name: "สุกี้แห้ง",
     englishName: "Stir-fried Sukiyaki (Dry)",
     price: 60,
@@ -574,7 +582,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: sukiOptions,
   },
   {
-    id: 60,
+    id: 67,
     name: "เส้นใหญ่ผัดซีอิ๊ว",
     englishName: "Stir-fried Large Rice Noodles with Soy Sauce (Pad See Ew)",
     price: 60,
@@ -582,7 +590,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: riceSimpleOptions,
   },
   {
-    id: 61,
+    id: 68,
     name: "เส้นหมี่ผัดซีอิ๊ว",
     englishName: "Stir-fried Rice Vermicelli with Soy Sauce (Pad See Ew)",
     price: 60,
@@ -590,7 +598,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: riceSimpleOptions,
   },
   {
-    id: 62,
+    id: 69,
     name: "ข้าวไข่เจียว 2 ฟอง",
     englishName: "2 Omelets with rice",
     price: 40,
@@ -598,7 +606,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: simpleTakeawayOptions,
   },
   {
-    id: 63,
+    id: 70,
     name: "ข้าวไข่เจียวหมูสับ",
     englishName: "minced-pork Omelets with rice",
     price: 50,
@@ -606,7 +614,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: simpleTakeawayOptions,
   },
   {
-    id: 64,
+    id: 71,
     name: "ข้าวไข่เจียวเนื้อสับ",
     englishName: "minced-beef Omelets with rice",
     price: 60,
@@ -614,7 +622,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: simpleTakeawayOptions,
   },
   {
-    id: 65,
+    id: 72,
     name: "ข้าวไข่เจียวทะเล",
     englishName: "Seafood Omelets with rice",
     price: 60,
@@ -622,7 +630,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: simpleTakeawayOptions,
   },
   {
-    id: 66,
+    id: 73,
     name: "หมูกรอบ 1 ขีด น้ำจิ้มซีฟู้ด",
     englishName: "Crispy Pork with seafood sauce",
     price: 60,
@@ -630,7 +638,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: simpleTakeawayOptions,
   },
   {
-    id: 67,
+    id: 74,
     name: "เกาเหลา",
     englishName: "No-Noodle Soup (Gaolaou)",
     price: 50,
@@ -639,7 +647,7 @@ export const menuItems: MenuItem[] = [
   },
 
   {
-    id: 68,
+    id: 75,
     name: "ข้าวเปล่า",
     englishName: "Rice",
     price: 10,
