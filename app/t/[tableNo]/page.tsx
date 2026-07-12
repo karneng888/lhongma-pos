@@ -22,12 +22,41 @@ type CartItem = MenuItem & {
 };
 const shouldOpenCustomerOptionGroupByDefault = (groupId: string) => {
   const defaultClosedGroups = [
-    "add-protein",
-    "spicy",
-    "spicy-level",
+    "add-protein",   // เพิ่มเนื้อสัตว์
+    "spicy",         // เผ็ด / ไม่เผ็ด
+    "spicy-level",   // เผ็ด / ไม่เผ็ด เผื่อใช้ชื่อนี้
+    "extra",         // Extra / พิเศษ
+    "food-type",     // กับข้าว
+    "takeaway",      // สั่งกลับบ้าน
+    "soup-type",
   ];
 
   return !defaultClosedGroups.includes(groupId);
+};
+const sortCustomerOptionGroups = (groups: MenuItem["optionGroups"]) => {
+  const order = [
+    "noodle-type",
+    "main-protein",
+    "add-protein",
+    "egg",
+    "soup-type",
+    "spicy",
+    "spicy-level",
+    "extra",
+    "food-type",
+    "takeaway",
+  ];
+
+  return [...(groups || [])].sort((a, b) => {
+    const aIndex = order.indexOf(a.id);
+    const bIndex = order.indexOf(b.id);
+
+    if (aIndex === -1 && bIndex === -1) return 0;
+    if (aIndex === -1) return 1;
+    if (bIndex === -1) return -1;
+
+    return aIndex - bIndex;
+  });
 };
 export default function TableOrderPage() {
   const params = useParams();
@@ -74,15 +103,42 @@ export default function TableOrderPage() {
 
   const openMenu = (item: MenuItem) => {
   const defaultOpenGroups: Record<string, boolean> = {};
+  const sortedGroups = sortCustomerOptionGroups(item.optionGroups);
 
-  item.optionGroups?.forEach((group) => {
+  sortedGroups.forEach((group) => {
     defaultOpenGroups[group.id] = shouldOpenCustomerOptionGroupByDefault(
       group.id
     );
   });
 
-  setSelectedMenu(item);
-  setSelectedOptions([]);
+  const defaultSelectedOptions: SelectedOption[] = [];
+
+  const soupGroup = sortedGroups.find((group) => group.id === "soup-type");
+
+  const defaultSoupOption = soupGroup?.options.find(
+    (option) =>
+      option.name === "น้ำ" ||
+      option.name.includes("น้ำ") ||
+      option.id === "soup-water" ||
+      option.id === "water"
+  );
+
+  if (soupGroup && defaultSoupOption) {
+    defaultSelectedOptions.push({
+      id: defaultSoupOption.id,
+      name: defaultSoupOption.name,
+      price: defaultSoupOption.price,
+      groupId: soupGroup.id,
+      groupName: soupGroup.name,
+    });
+  }
+
+  setSelectedMenu({
+    ...item,
+    optionGroups: sortedGroups,
+  });
+
+  setSelectedOptions(defaultSelectedOptions);
   setOpenOptionGroups(defaultOpenGroups);
   setNote("");
   setQty(1);
@@ -146,12 +202,12 @@ export default function TableOrderPage() {
     return [...prev, selectedOption];
   });
 
-  if (type === "single") {
-    setOpenOptionGroups((prev) => ({
-      ...prev,
-      [groupId]: false,
-    }));
-  }
+  if (type === "single" || groupId === "egg") {
+  setOpenOptionGroups((prev) => ({
+    ...prev,
+    [groupId]: false,
+  }));
+}
 };
 
   const addSelectedMenuToCart = () => {
@@ -563,22 +619,35 @@ export default function TableOrderPage() {
         <div className="fixed inset-0 z-50 flex items-end bg-black/50 md:items-center">
           <div className="mx-auto max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-t-2xl bg-white p-5 shadow md:rounded-2xl">
             <div className="flex items-start justify-between gap-4">
-              <div>
-                <h2 className="text-2xl font-bold">{selectedMenu.name}</h2>
-                <p className="text-gray-500">
-                  ราคาเริ่มต้น {selectedMenu.price} บาท
-                </p>
-              </div>
+  <div>
+    <h2 className="text-2xl font-bold">{selectedMenu.name}</h2>
+    <p className="text-gray-500">
+      ราคาเริ่มต้น {selectedMenu.price} บาท
+    </p>
+  </div>
 
-              <button
-                onClick={closeMenu}
-                className="rounded-full bg-gray-100 px-3 py-1 font-bold"
-              >
-                ✕
-              </button>
-            </div>
+  <div className="flex items-center gap-2">
+    <button
+      onClick={addSelectedMenuToCart}
+      className="rounded-xl bg-orange-600 px-3 py-2 text-sm font-bold text-white hover:bg-orange-700"
+    >
+      เพิ่มเมนู
+    </button>
 
-            {selectedMenu.optionGroups?.map((group) => {
+    <button
+      onClick={closeMenu}
+      className="rounded-full bg-gray-100 px-3 py-1 font-bold"
+    >
+      ✕
+    </button>
+  </div>
+</div>
+
+            {selectedMenu.optionGroups
+  ?.filter(
+    (group) => group.id !== "spicy" && group.id !== "spicy-level"
+  )
+  .map((group) => {
               const isOpen = openOptionGroups[group.id] || false;
 
               const selectedInGroup = selectedOptions.filter(
