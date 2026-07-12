@@ -543,12 +543,6 @@ export default function CashierPage() {
     return [...prev, selectedOption];
   });
 
-  if (type === "single") {
-    setOpenOptionGroups((prev) => ({
-      ...prev,
-      [groupId]: false,
-    }));
-  }
 };
 
   const addItemToTable = async () => {
@@ -1158,7 +1152,7 @@ if (hasMainProtein && !selectedMainProtein) {
 
                 <h3 className="mt-4 font-bold">เลือกเมนู</h3>
 
-                <div className="mt-2 grid gap-2">
+                <div className="mt-2 grid grid-cols-2 gap-2 md:grid-cols-3">
                   {filteredAddMenuItems.map((item) => (
                     <button
                       key={item.id}
@@ -1170,21 +1164,29 @@ if (hasMainProtein && !selectedMainProtein) {
                         setAddItemNote("");
                         setAddItemQty(1);
                       }}
-                      className={`flex justify-between rounded-xl border p-3 text-left ${
+                      className={`min-h-[82px] rounded-xl border p-3 text-left shadow-sm transition active:scale-[0.98] ${
                         selectedMenu?.id === item.id
                           ? "border-orange-500 bg-orange-100"
-                          : "bg-white"
+                          : "bg-white hover:border-orange-300 hover:bg-orange-50"
                       }`}
                     >
-                      <span className="font-bold">{item.name}</span>
+                      <div className="flex h-full flex-col justify-between gap-2">
+                        <div>
+                          <span className="block font-bold leading-tight">
+                            {item.name}
+                          </span>
 
-                      {item.englishName && (
-                        <p className="mt-1 text-xs font-medium text-gray-500">
-                          {item.englishName}
-                        </p>
-                      )}
+                          {item.englishName && (
+                            <span className="mt-1 block text-xs font-medium text-gray-500">
+                              {item.englishName}
+                            </span>
+                          )}
+                        </div>
 
-                      <span>{item.price}฿</span>
+                        <span className="font-bold text-orange-700">
+                          {item.price}฿
+                        </span>
+                      </div>
                     </button>
                   ))}
                 </div>
@@ -1228,94 +1230,167 @@ if (hasMainProtein && !selectedMainProtein) {
             {selectedMenu && (
               <>
                 {selectedMenu.optionGroups?.map((group) => {
-                  const isOpen = openOptionGroups[group.id] || false;
+  const selectedInGroup = selectedOptions.filter(
+    (option) => option.groupId === group.id
+  );
 
-                  const selectedInGroup = selectedOptions.filter(
-                    (option) => option.groupId === group.id
-                  );
+  const availableOptions = group.options.filter(
+    (option) =>
+      optionStatusMap.get(option.stockId || option.id) !== false
+  );
 
-                  const selectedText =
-                    selectedInGroup.length > 0
-                      ? selectedInGroup.map((option) => option.name).join(", ")
-                      : "ยังไม่ได้เลือก";
+  const groupIdLower = group.id.toLowerCase();
+  const groupNameLower = group.name.toLowerCase();
 
-                  const availableOptions = group.options.filter(
-                    (option) =>
-                      optionStatusMap.get(option.stockId || option.id) !== false
-                  );
+  // ระดับความเผ็ด
+  const isSpicyGroup =
+    groupIdLower.includes("spicy") ||
+    groupIdLower.includes("spice") ||
+    group.name.includes("เผ็ด");
 
-                  return (
-                    <div key={group.id} className="mt-4 rounded-2xl border bg-white">
-                      <button
-                        type="button"
-                        onClick={() => toggleOptionGroupOpen(group.id)}
-                        className="flex w-full items-center justify-between gap-3 rounded-2xl p-4 text-left"
-                      >
-                        <div>
-                          <h3 className="text-lg font-bold">{group.name}</h3>
-                          <p className="text-sm text-gray-500">
-                            {group.type === "single"
-                              ? "เลือกได้ 1 อย่าง"
-                              : "เลือกได้หลายอย่าง"}
-                          </p>
-                          <p
-                            className={`mt-1 text-sm ${
-                              selectedInGroup.length > 0
-                                ? "font-bold text-orange-700"
-                                : "text-gray-400"
-                            }`}
-                          >
-                            {selectedText}
-                          </p>
-                        </div>
+  // เนื้อสัตว์เพิ่มเติม ไม่รวมเนื้อสัตว์หลัก
+  const isMainProteinGroup =
+    group.id === "main-protein" ||
+    groupIdLower.includes("main-protein") ||
+    groupNameLower.includes("เนื้อสัตว์หลัก");
 
-                        <span className="text-2xl font-bold text-orange-700">
-                          {isOpen ? "▲" : "▼"}
-                        </span>
-                      </button>
+  const isExtraProteinGroup =
+    !isMainProteinGroup &&
+    (
+      groupIdLower.includes("extra-protein") ||
+      groupIdLower.includes("additional-protein") ||
+      groupIdLower.includes("add-protein") ||
+      group.name.includes("เพิ่มเนื้อสัตว์") ||
+      group.name.includes("เนื้อสัตว์เพิ่ม")
+    );
 
-                      {isOpen && (
-                        <div className="grid gap-2 border-t p-3">
-                          {availableOptions.length === 0 ? (
-                            <p className="rounded-xl bg-red-50 p-3 text-sm font-bold text-red-700">
-                              ตัวเลือกในหมวดนี้หมดค่ะ
-                            </p>
-                          ) : (
-                            availableOptions.map((option) => {
-                              const selected = isOptionSelected(option.id);
+  // กลุ่มที่ต้องพับซ่อน
+  const isCollapsibleGroup =
+    isSpicyGroup || isExtraProteinGroup;
 
-                              return (
-                                <button
-                                  key={option.id}
-                                  onClick={() =>
-                                    toggleOption(
-                                      group.id,
-                                      group.name,
-                                      group.type,
-                                      option
-                                    )
-                                  }
-                                  className={`flex justify-between rounded-xl border p-3 text-left ${
-                                    selected
-                                      ? "border-orange-500 bg-orange-100"
-                                      : "bg-white"
-                                  }`}
-                                >
-                                  <span className="font-bold">{option.name}</span>
-                                  <span>
-                                    {option.price > 0
-                                      ? `+${option.price}฿`
-                                      : "ฟรี"}
-                                  </span>
-                                </button>
-                              );
-                            })
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+  const isGroupOpen = isCollapsibleGroup
+    ? openOptionGroups[group.id] || false
+    : true;
+
+  const helperText = isSpicyGroup
+    ? "ไม่เลือกก็ได้ กดเมื่อต้องการระบุความเผ็ด"
+    : isExtraProteinGroup
+    ? "กดเมื่อลูกค้าต้องการเพิ่มเนื้อสัตว์"
+    : group.type === "single"
+    ? "เลือกได้ 1 อย่าง"
+    : "เลือกได้หลายอย่าง";
+
+  return (
+    <div
+      key={group.id}
+      className="mt-4 rounded-2xl border bg-white p-3"
+    >
+      {isCollapsibleGroup ? (
+        <button
+          type="button"
+          onClick={() => toggleOptionGroupOpen(group.id)}
+          className="flex w-full items-center justify-between gap-3 rounded-xl p-1 text-left"
+        >
+          <div>
+            <h3 className="text-lg font-bold">{group.name}</h3>
+
+            <p className="text-sm text-gray-500">
+              {helperText}
+            </p>
+
+            {selectedInGroup.length > 0 && (
+              <p className="mt-1 text-sm font-bold text-orange-700">
+                เลือกแล้ว:{" "}
+                {selectedInGroup
+                  .map((option) => option.name)
+                  .join(", ")}
+              </p>
+            )}
+          </div>
+
+          <span className="shrink-0 rounded-xl bg-gray-100 px-3 py-2 font-bold text-orange-700">
+            {isGroupOpen ? "▲ ซ่อน" : "+ เลือก"}
+          </span>
+        </button>
+      ) : (
+        <div className="mb-3 flex items-start justify-between gap-3">
+          <div>
+            <h3 className="text-lg font-bold">{group.name}</h3>
+
+            <p className="text-sm text-gray-500">
+              {helperText}
+            </p>
+          </div>
+
+          {selectedInGroup.length > 0 && (
+            <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-bold text-orange-700">
+              เลือกแล้ว {selectedInGroup.length}
+            </span>
+          )}
+        </div>
+      )}
+
+      {isGroupOpen && (
+        <div
+          className={
+            isCollapsibleGroup
+              ? "mt-3 border-t pt-3"
+              : ""
+          }
+        >
+          {availableOptions.length === 0 ? (
+            <p className="rounded-xl bg-red-50 p-3 text-sm font-bold text-red-700">
+              ตัวเลือกในหมวดนี้หมดค่ะ
+            </p>
+          ) : (
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {availableOptions.map((option) => {
+                const selected = isOptionSelected(option.id);
+
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    onClick={() =>
+                      toggleOption(
+                        group.id,
+                        group.name,
+                        group.type,
+                        option
+                      )
+                    }
+                    className={`min-h-[62px] rounded-xl border p-2 text-left transition active:scale-[0.98] ${
+                      selected
+                        ? "border-orange-500 bg-orange-100 ring-2 ring-orange-200"
+                        : "bg-white hover:border-orange-300 hover:bg-orange-50"
+                    }`}
+                  >
+                    <span className="block font-bold leading-tight">
+                      {selected ? "✓ " : ""}
+                      {option.name}
+                    </span>
+
+                    <span
+                      className={`mt-1 block text-sm ${
+                        option.price > 0
+                          ? "font-bold text-orange-700"
+                          : "text-gray-500"
+                      }`}
+                    >
+                      {option.price > 0
+                        ? `+${option.price}฿`
+                        : "ฟรี"}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+})}
 
                 <div className="mt-5">
                   <h3 className="font-bold">หมายเหตุ</h3>
