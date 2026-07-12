@@ -146,21 +146,21 @@ async function createKitchenPdf(orders, kitchenTitle) {
 
   // Orders
   orders.forEach((order, index) => {
-    drawLeftText(doc, `${index + 1}. ${order.name}`, 18, true);
+    drawLeftText(doc, `${index + 1}. ${order.name}`, 15, true);
     doc.moveDown(0.15);
 
-    drawLeftText(doc, `จำนวน: ${order.qty}`, 15, true);
+    drawLeftText(doc, `จำนวน: ${order.qty}`, 13, true);
     doc.moveDown(0.15);
 
     const options = formatOptions(order.options);
     options.forEach((optionName) => {
-      drawLeftText(doc, `+ ${optionName}`, 15, false);
+      drawLeftText(doc, `+ ${optionName}`, 13, false);
       doc.moveDown(0.08);
     });
 
     if (order.note) {
       doc.moveDown(0.15);
-      drawLeftText(doc, `หมายเหตุ: ${order.note}`, 15, true);
+      drawLeftText(doc, `หมายเหตุ: ${order.note}`, 13, true);
     }
 
     doc.moveDown(0.45);
