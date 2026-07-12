@@ -536,7 +536,7 @@ export const menuItems: MenuItem[] = [
   {
     id: 55,
     name: "ข้าวผัดคะน้า",
-    englishName: "Stir-fried Holy Basil with Bamboo Shoots and Rice",
+    englishName: "Chinese Broccoli with Rice",
     price: 45,
     station: "rice",
     optionGroups: riceSpicyOptions,
