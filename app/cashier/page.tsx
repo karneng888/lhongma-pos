@@ -48,6 +48,8 @@ type OrderItem = {
   created_at: string;
   options?: OrderOption[] | null;
   item_total?: number | null;
+  order_source?: "customer" | "cashier" | null;
+  kitchen_printed?: boolean | null;
 };
 
 const getItemUnitPrice = (item: OrderItem) => {
@@ -446,6 +448,8 @@ export default function CashierPage() {
       paid: false,
       options: [],
       item_total: customItemPrice,
+      order_source: "cashier",
+      kitchen_printed: true,
     };
 
     const { error } = await supabase.from("orders").insert([newOrder]);
@@ -582,6 +586,8 @@ if (hasMainProtein && !selectedMainProtein) {
       station: selectedMenu.station,
       status: "new",
       paid: false,
+      order_source: "cashier",
+      kitchen_printed: true,
       options: selectedOptions.map((option) => ({
         name: option.name,
         price: option.price,
@@ -659,7 +665,37 @@ if (hasMainProtein && !selectedMainProtein) {
     setNoteDraft("");
     await loadOrders();
   };
+    const sendCashierItemsToKitchen = async () => {
+  if (!selectedTable) {
+    alert("กรุณาเลือกโต๊ะก่อนค่ะ");
+    return;
+  }
 
+  const confirmed = confirm(
+    `ต้องการส่งรายการที่แคชเชียร์เพิ่มเองของ ${getTableName(
+      selectedTable
+    )} เข้าครัวใช่ไหม?`
+  );
+
+  if (!confirmed) return;
+
+  const { error } = await supabase
+    .from("orders")
+    .update({ kitchen_printed: false })
+    .eq("table_no", selectedTable)
+    .eq("paid", false)
+    .eq("order_source", "cashier")
+    .eq("kitchen_printed", true);
+
+  if (error) {
+    console.error(error);
+    alert("ส่งเข้าครัวไม่สำเร็จ: " + error.message);
+    return;
+  }
+
+  alert("ส่งรายการเข้าครัวแล้วค่ะ");
+  await loadOrders();
+};
   const payAndPrint = async () => {
     if (!selectedTable) {
       alert("กรุณาเลือกโต๊ะก่อนค่ะ");

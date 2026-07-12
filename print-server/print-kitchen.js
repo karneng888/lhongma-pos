@@ -12,7 +12,7 @@ const PRINTER_NAME = "XP-80C";
 
 // เช็กออเดอร์ทุกกี่วินาที
 const CHECK_EVERY_MS = 7000;
-
+ // รอ 60 วิ ก่อนปริ้น เพื่อรวมรายการที่เพิ่มติดกัน
 // ขนาดกระดาษ 80mm หน่วยเป็น point
 const PAPER_WIDTH = 226;
 const PAPER_HEIGHT = 1400;
@@ -232,12 +232,14 @@ async function checkAndPrintOrders() {
   isPrinting = true;
 
   try {
-    const { data, error } = await supabase
-      .from("orders")
-      .select("*")
-      .eq("paid", false)
-      .eq("kitchen_printed", false)
-      .order("created_at", { ascending: true });
+
+
+const { data, error } = await supabase
+  .from("orders")
+  .select("*")
+  .eq("paid", false)
+  .eq("kitchen_printed", false)
+  .order("created_at", { ascending: true });
 
     if (error) {
       console.error("โหลดออเดอร์ไม่สำเร็จ:", error.message);
