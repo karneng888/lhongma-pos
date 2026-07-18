@@ -315,14 +315,14 @@ const noodleOptionsSoup: MenuOptionGroup[] = [
 ];
 
 export const menuItems: MenuItem[] = [
-  {
-    id: 1,
-    name: "ก๋วยเตี๋ยวไก่มะระ",
-    englishName: "Chicken Noodle Soup with Bitter Melon",
-    price: 50,
-    station: "noodle",
-    optionGroups: noodleOptions,
-  },
+  //{
+  //  id: 1,
+  //  name: "ก๋วยเตี๋ยวไก่มะระ",
+   // englishName: "Chicken Noodle Soup with Bitter Melon",
+  //  price: 50,
+  //  station: "noodle",
+  //  optionGroups: noodleOptions,
+  //},
   {
     id: 2,
     name: "ก๋วยเตี๋ยวไก่น้ำใส",
@@ -507,12 +507,18 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 29,
+    name: "น้ำส้ม",
+    englishName: "Orange Juice",
+    price: 25,
+    station: "drink",
+  },
+  {
+    id: 49,
     name: "น้ำแข็ง",
     englishName: "Ice",
     price: 0,
     station: "drink",
   },
-
 
   {
     id: 50,
