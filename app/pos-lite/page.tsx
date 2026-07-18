@@ -17,13 +17,13 @@ export default function PosLitePage() {
 
         <div className="mt-5 grid grid-cols-2 gap-3">
           {tables.map((tableNo) => (
-            <Link
-              key={tableNo}
-              href={`/cashier?table=${tableNo}`}
-              className="rounded-2xl bg-white p-6 text-center text-3xl font-bold shadow hover:bg-orange-100"
-            >
-              โต๊ะ {tableNo}
-            </Link>
+            <a
+  key={tableNo}
+  href={`/cashier?table=${tableNo}`}
+  className="rounded-2xl bg-white p-6 text-center text-3xl font-bold shadow hover:bg-orange-100"
+>
+  โต๊ะ {tableNo}
+</a>
           ))}
         </div>
 

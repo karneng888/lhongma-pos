@@ -232,13 +232,14 @@ export default function CashierPage() {
   setCustomMenuItems((data || []) as CustomMenuItem[]);
 };
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const tableFromUrl = params.get("table");
+  const search = window.location.search || "";
+  const match = search.match(/[?&]table=([^&]+)/);
+  const tableFromUrl = match ? decodeURIComponent(match[1]) : "";
 
-    if (tableFromUrl) {
-      setSelectedTable(tableFromUrl);
-    }
-  }, []);
+  if (tableFromUrl) {
+    setSelectedTable(tableFromUrl);
+  }
+}, []);
 
   useEffect(() => {
     loadOrders();
