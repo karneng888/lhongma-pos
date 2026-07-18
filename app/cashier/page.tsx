@@ -852,12 +852,21 @@ if (hasMainProtein && !selectedMainProtein) {
               </p>
             </div>
 
-            <Link
-              href="/pos"
-              className="rounded-xl bg-gray-900 px-4 py-3 text-center font-bold text-white hover:bg-gray-800"
-            >
-              กลับหน้าแผนผังโต๊ะ
-            </Link>
+            <div className="flex flex-wrap gap-2">
+  <Link
+    href="/pos"
+    className="rounded-xl bg-gray-900 px-4 py-3 text-center font-bold text-white hover:bg-gray-800"
+  >
+    กลับแผนผังเต็ม
+  </Link>
+
+  <Link
+    href="/pos-lite"
+    className="rounded-xl bg-orange-600 px-4 py-3 text-center font-bold text-white hover:bg-orange-700"
+  >
+    กลับ POS Lite
+  </Link>
+</div>
           </div>
         </div>
 

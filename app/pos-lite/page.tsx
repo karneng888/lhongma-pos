@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 const tables = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 
 export default function PosLitePage() {
@@ -18,36 +16,36 @@ export default function PosLitePage() {
         <div className="mt-5 grid grid-cols-2 gap-3">
           {tables.map((tableNo) => (
             <a
-  key={tableNo}
-  href={`/cashier?table=${tableNo}`}
-  className="rounded-2xl bg-white p-6 text-center text-3xl font-bold shadow hover:bg-orange-100"
->
-  โต๊ะ {tableNo}
-</a>
+              key={tableNo}
+              href={`/cashier?table=${tableNo}`}
+              className="rounded-2xl bg-white p-6 text-center text-3xl font-bold shadow hover:bg-orange-100"
+            >
+              โต๊ะ {tableNo}
+            </a>
           ))}
         </div>
 
         <div className="mt-6 grid gap-3">
-          <Link
+          <a
             href="/pos"
             className="rounded-2xl bg-gray-900 p-4 text-center text-xl font-bold text-white"
           >
             กลับหน้าแผนผังเต็ม
-          </Link>
+          </a>
 
-          <Link
+          <a
             href="/cashier"
             className="rounded-2xl bg-blue-600 p-4 text-center text-xl font-bold text-white"
           >
             ไปหน้าแคชเชียร์
-          </Link>
+          </a>
 
-          <Link
+          <a
             href="/report/today"
             className="rounded-2xl bg-green-600 p-4 text-center text-xl font-bold text-white"
           >
             รายงานวันนี้
-          </Link>
+          </a>
         </div>
       </div>
     </main>
