@@ -47,7 +47,67 @@ function getTableName(tableNo) {
 
   return `โต๊ะ ${tableNo}`;
 }
+async function sendLineMessage(text) {
+  const token = process.env.LINE_CHANNEL_ACCESS_TOKEN;
+  const groupId = process.env.LINE_GROUP_ID;
 
+  if (!token || !groupId) {
+    console.log("ยังไม่ได้ตั้งค่า LINE_CHANNEL_ACCESS_TOKEN หรือ LINE_GROUP_ID");
+    return;
+  }
+
+  const response = await fetch("https://api.line.me/v2/bot/message/push", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      to: groupId,
+      messages: [
+        {
+          type: "text",
+          text,
+        },
+      ],
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error("ส่ง LINE ไม่สำเร็จ:", errorText);
+    return;
+  }
+
+  console.log("ส่ง LINE สำเร็จ");
+}
+
+function createLineOrderMessage(orders, kitchenTitle) {
+  const firstOrder = orders[0];
+
+  let text = `🍜 ร้านหลงมา - ออเดอร์ใหม่\n`;
+  text += `${getTableName(firstOrder.table_no)}\n`;
+  text += `ครัว: ${kitchenTitle}\n\n`;
+
+  orders.forEach((order, index) => {
+    text += `${index + 1}. ${order.name} x${order.qty}\n`;
+
+    const options = formatOptions(order.options);
+    options.forEach((optionName) => {
+      text += `+ ${optionName}\n`;
+    });
+
+    if (order.note) {
+      text += `หมายเหตุ: ${order.note}\n`;
+    }
+
+    text += `\n`;
+  });
+
+  text += `รวม ${orders.length} รายการ`;
+
+  return text;
+}
 function formatOptions(options) {
   if (!options || !Array.isArray(options) || options.length === 0) {
     return [];
@@ -217,6 +277,9 @@ async function printGroup(tableNo, orders, kitchenTitle) {
   console.log(
     `กำลังปริ้น ${getTableName(tableNo)} | ${kitchenTitle} | จำนวน ${orders.length} รายการ`
   );
+
+  //const lineMessage = createLineOrderMessage(orders, kitchenTitle);
+  //await sendLineMessage(lineMessage);
 
   await printKitchenTicket(orders, kitchenTitle);
 
