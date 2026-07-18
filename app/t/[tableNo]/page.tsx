@@ -20,6 +20,23 @@ type CartItem = MenuItem & {
   selectedOptions: SelectedOption[];
   itemTotal: number;
 };
+type SubmittedOrderOption = {
+  name: string;
+  price?: number;
+  groupName?: string;
+};
+
+type SubmittedOrderItem = {
+  id: number;
+  name: string;
+  qty: number;
+  note: string | null;
+  options?: SubmittedOrderOption[] | null;
+  item_total?: number | null;
+  price: number;
+  created_at: string;
+};
+
 const shouldOpenCustomerOptionGroupByDefault = (groupId: string) => {
   const defaultClosedGroups = [
     "add-protein",   // เพิ่มเนื้อสัตว์
@@ -74,6 +91,8 @@ export default function TableOrderPage() {
   const [note, setNote] = useState("");
   const [qty, setQty] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submittedOrders, setSubmittedOrders] = useState<SubmittedOrderItem[]>([]);
+  const [isLoadingSubmittedOrders, setIsLoadingSubmittedOrders] = useState(false);
 
   // Table session
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
@@ -256,6 +275,29 @@ export default function TableOrderPage() {
     );
   };
 
+  const loadSubmittedOrders = async (sessionId: string) => {
+    if (!sessionId) return;
+
+    setIsLoadingSubmittedOrders(true);
+
+    const { data, error } = await supabase
+      .from("orders")
+      .select("id, name, qty, note, options, item_total, price, created_at")
+      .eq("table_no", tableNo)
+      .eq("session_id", sessionId)
+      .eq("paid", false)
+      .order("created_at", { ascending: true });
+
+    setIsLoadingSubmittedOrders(false);
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    setSubmittedOrders((data || []) as SubmittedOrderItem[]);
+  };
+
   const loadTableSession = async () => {
   setIsSessionLoading(true);
 
@@ -298,6 +340,7 @@ export default function TableOrderPage() {
     );
 
     setCurrentSessionId(data.id);
+    await loadSubmittedOrders(data.id);
     setIsSessionBlocked(false);
     setIsSessionLoading(false);
     return;
@@ -335,12 +378,14 @@ export default function TableOrderPage() {
     );
 
     setCurrentSessionId(data.id);
+    await loadSubmittedOrders(data.id);
     setIsSessionBlocked(false);
     setIsSessionLoading(false);
     return;
   }
 
   setCurrentSessionId(data.id);
+  await loadSubmittedOrders(data.id);
   setIsSessionBlocked(false);
   setIsSessionLoading(false);
 };
@@ -388,6 +433,7 @@ export default function TableOrderPage() {
 
     alert("ส่งออเดอร์เรียบร้อยค่ะ");
     setCart([]);
+    await loadSubmittedOrders(currentSessionId);
   };
 
   const loadOptionStatus = async () => {
@@ -411,6 +457,16 @@ export default function TableOrderPage() {
     loadOptionStatus();
     loadTableSession();
   }, []);
+
+  useEffect(() => {
+    if (!currentSessionId || isSessionBlocked) return;
+
+    const timer = setInterval(() => {
+      loadSubmittedOrders(currentSessionId);
+    }, 5000);
+
+    return () => clearInterval(timer);
+  }, [currentSessionId, isSessionBlocked]);
 
   if (isSessionLoading) {
     return (
@@ -450,6 +506,55 @@ export default function TableOrderPage() {
             เลือกเมนู ใส่ตัวเลือก แล้วกดยืนยันออเดอร์
             ไม่เจอเมนูที่ต้องการรบกวนสั่งที่เคาเตอร์ค่ะ
           </p>
+        </div>
+
+        <div className="mt-4 rounded-3xl bg-white p-5 shadow">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-2xl font-bold text-orange-900">
+              รายการที่สั่งไปแล้ว
+            </h2>
+            {isLoadingSubmittedOrders && (
+              <span className="text-sm font-bold text-gray-400">กำลังโหลด...</span>
+            )}
+          </div>
+
+          {submittedOrders.length === 0 ? (
+            <p className="mt-3 text-gray-500">
+              ยังไม่มีรายการที่ส่งเข้าครัวในรอบโต๊ะนี้
+            </p>
+          ) : (
+            <div className="mt-4 space-y-3">
+              {submittedOrders.map((order) => (
+                <div
+                  key={order.id}
+                  className="rounded-2xl border border-orange-100 bg-orange-50 p-3"
+                >
+                  <div className="flex justify-between gap-3">
+                    <p className="font-bold">
+                      {order.name} x {order.qty}
+                    </p>
+                    <p className="font-bold text-orange-700">
+                      {Number(order.item_total || order.price) * order.qty} บาท
+                    </p>
+                  </div>
+
+                  {order.options && order.options.length > 0 && (
+                    <div className="mt-1 text-sm text-gray-600">
+                      {order.options.map((option, index) => (
+                        <p key={`${order.id}-${index}`}>+ {option.name}</p>
+                      ))}
+                    </div>
+                  )}
+
+                  {order.note && (
+                    <p className="mt-1 text-sm text-gray-500">
+                      หมายเหตุ: {order.note}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {cart.length > 0 && (

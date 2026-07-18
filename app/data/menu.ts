@@ -158,6 +158,7 @@ const eggOptions: MenuOptionGroup = {
     { id: "fried-egg", name: "ไข่ดาว", englishName: "Fried egg", price: 10 },
     { id: "omelet", name: "ไข่เจียว", englishName: "Omelet", price: 15 },
     { id: "boiled-eeg", name: "ไข่ต้ม", englishName: "Boiled egg", price: 10 },
+    { id: "boiled-eeg", name: "ไข่เยี่ยวม้า", englishName: "Century Egg", price: 10 },
   ],
 };
 
@@ -261,6 +262,7 @@ const noodleOptions: MenuOptionGroup[] = [
     { id: "fried-egg", name: "ไข่ดาว", englishName: "Fried egg", price: 10 },
     { id: "omelet", name: "ไข่เจียว", englishName: "Omelet", price: 15 },
     { id: "boiled-eeg", name: "ไข่ต้ม", englishName: "Boiled egg", price: 10 },
+    { id: "boiled-eeg", name: "ไข่เยี่ยวม้า", englishName: "Century Egg", price: 10 },
   ],
   },
   {
