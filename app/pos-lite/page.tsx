@@ -19,7 +19,7 @@ export default function PosLitePage() {
           {tables.map((tableNo) => (
             <a
               key={tableNo}
-              href={`/t/${tableNo}`}
+              href={`/order-lite/${tableNo}`}
               className="rounded-2xl bg-white p-6 text-center text-3xl font-bold shadow hover:bg-orange-100"
             >
               โต๊ะ {tableNo}
