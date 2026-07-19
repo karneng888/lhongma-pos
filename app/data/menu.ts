@@ -41,6 +41,7 @@ const mainProteinOptions: MenuOptionGroup = {
     { id: "crispy-chicken", name: "ไก่กรอบ", englishName: "Crispy Chicken",  price: 5 },
     { id: "stewed-pork", name: "หมูตุ๋น", englishName: "Braised pork", price: 5 },
     { id: "stewed-beef", name: "เนื้อตุ๋น", englishName: "Braised beef", price: 10 },
+    { id: " sour-pork", name: "แหนม", englishName: "Sour pork", price: 5 },
   ],
 };
 
@@ -60,6 +61,7 @@ const mainProteinOptionsSuki: MenuOptionGroup = {
     { id: "sliced-beef", name: "เนื้อชิ้น", englishName: "Sliced Beef",  price: 10 },
     { id: "stewed-pork", name: "หมูตุ๋น", englishName: "Braised pork", price: 10 },
     { id: "stewed-beef", name: "เนื้อตุ๋น", englishName: "Braised beef", price: 10 },
+    { id: " sour-pork", name: "แหนม", englishName: "Sour pork", price: 5 },
   ],
 };
 
@@ -113,6 +115,7 @@ const addProteinOptions: MenuOptionGroup = {
     { id: "add-crispy-chicken", name: "เพิ่มไก่กรอบ", englishName: "Add crispy-chicken", price: 10, stockId: "crispy-chicken" },
     { id: "add-stewed-pork", name: "เพิ่มหมูตุ๋น", englishName: "Add stewed-pork", price: 10, stockId: "stewed-pork" },
     { id: "add-stewed-beef", name: "เพิ่มเนื้อตุ๋น", englishName: "Add stewed-beef", price: 15, stockId: "stewed-beef" },
+    { id: "add- sour-pork", name: "แหนม", englishName: "Add Sour pork", price: 10, stockId: "sour-pork"},
   ],
 };
 
@@ -208,6 +211,12 @@ const riceNoSpicyOptions: MenuOptionGroup[] = [
 const riceSimpleOptions: MenuOptionGroup[] = [
   mainProteinOptions,
   addProteinOptions,
+  extraOptions,
+  eggOptions,
+  takeawayOptions,
+];
+const Crispymenu: MenuOptionGroup[] = [
+  
   extraOptions,
   eggOptions,
   takeawayOptions,
@@ -601,6 +610,23 @@ export const menuItems: MenuItem[] = [
     station: "rice",
     optionGroups: riceSpicyOptions,
   },
+  {
+    id: 60,
+    name: "ข้าวไก่ทอดกรอบ",
+    englishName: "Chicken Fried with Rice",
+    price: 50,
+    station: "rice",
+    optionGroups: Crispymenu,
+  },
+  {
+    id: 61,
+    name: "ข้าวหมูกรอบทอด",
+    englishName: "Crispy pork with Rice",
+    price: 50,
+    station: "rice",
+    optionGroups: Crispymenu,
+  },
+
   {
     id: 70,
     name: "ข้าวผัด",
