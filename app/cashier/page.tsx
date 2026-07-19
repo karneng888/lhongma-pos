@@ -853,13 +853,14 @@ if (hasMainProtein && !selectedMainProtein) {
             </div>
 
             <div className="flex flex-wrap gap-2">
-  <Link
+
+  {/*<Link
     href="/pos"
     className="rounded-xl bg-gray-900 px-4 py-3 text-center font-bold text-white hover:bg-gray-800"
   >
     กลับแผนผังเต็ม
-  </Link>
-
+ </Link>
+*/}
   <Link
     href="/pos-lite"
     className="rounded-xl bg-orange-600 px-4 py-3 text-center font-bold text-white hover:bg-orange-700"

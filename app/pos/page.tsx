@@ -175,6 +175,13 @@ export default function PosPage() {
               >
                 รีเฟรช
               </button>
+              <Link
+    href="/menu"
+    target="_blank"
+    className="rounded-xl bg-green-800 px-4 py-3 text-center font-bold text-white shadow hover:bg-green-900"
+  >
+    เปิดเมนูออนไลน์
+  </Link>
 
               <Link
                 href="/admin/menu"

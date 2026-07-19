@@ -382,6 +382,14 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 8,
+    name: "ก๋วยเตี๋ยวต้มยำไก่",
+    englishName: "Chicken Tom Yum Noodles",
+    price: 50,
+    station: "noodle",
+    optionGroups: noodleOptions,
+  },
+  {
+    id: 9,
     name: "เย็นตาโฟ",
     englishName: "Yentafo (Pink soup)",
     price: 50,
@@ -389,7 +397,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: noodleOptions,
   },
   {
-    id: 9,
+    id: 10,
     name: "เย็นตาโฟทะเล",
     englishName: "Seafood Yentafo (Pink soup)",
     price: 60,
@@ -399,7 +407,7 @@ export const menuItems: MenuItem[] = [
 
   
   {
-    id: 10,
+    id: 11,
     name: "เย็นตาโฟหมูกรอบ",
     englishName: "Crispy Pork Yentafo (Pink soup)",
     price: 60,
@@ -408,7 +416,7 @@ export const menuItems: MenuItem[] = [
   },
   
   {
-    id: 11,
+    id: 12,
     name: "ก๋วยเตี๋ยวหมูน้ำใส",
     englishName: "Clear Soup Pork Noodles",
     price: 50,
