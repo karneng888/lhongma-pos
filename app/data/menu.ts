@@ -99,7 +99,7 @@ const mainProteinOptionsFriedRice: MenuOptionGroup = {
     { id: "seafood", name: "ทะเล", englishName: "Seafood",  price: 5 },
     { id: "minced-beef", name: "เนื้อสับ", englishName: "Minced Beef",  price: 5 },
     { id: "sliced-beef", name: "เนื้อชิ้น", englishName: "Sliced Beef",  price: 5 },
-    { id: "stewed-pork", name: "หมูตุ๋น", englishName: "Braised pork", price: 5 },
+    { id: "stewed-pork", name: "หมูตุ๋น", englishName: "Braised pork", price: 0 },
     { id: "stewed-beef", name: "เนื้อตุ๋น", englishName: "Braised beef", price: 5 },
     { id: " sour-pork", name: "แหนม", englishName: "Sour pork", price: 0 },
   ],
@@ -416,6 +416,14 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 6,
+    name: "ก๋วยเตี๋ยวเนื้อตุ๋น",
+    englishName: "Braised Beef Noodles",
+    price: 50,
+    station: "noodle",
+    optionGroups: noodleOptions,
+  },
+  {
+    id: 7,
     name: "ก๋วยเตี๋ยวต้มยำหมู",
     englishName: "Pork Tom Yum Noodles",
     price: 50,
@@ -423,7 +431,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: noodleOptions,
   },
   {
-    id: 7,
+    id: 8,
     name: "ก๋วยเตี๋ยวต้มยำหมูกรอบ",
     englishName: "Crispy Pork Tom Yum Noodles",
     price: 60,
@@ -431,7 +439,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: noodleOptions,
   },
   {
-    id: 8,
+    id: 9,
     name: "ก๋วยเตี๋ยวต้มยำไก่กรอบ",
     englishName: "Crispy Chicken Tom Yum Noodles",
     price: 50,
@@ -439,7 +447,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: noodleOptions,
   },
   {
-    id: 9,
+    id: 10,
     name: "ก๋วยเตี๋ยวต้มยำไก่",
     englishName: "Chicken Tom Yum Noodles",
     price: 50,
@@ -447,7 +455,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: noodleOptions,
   },
   {
-    id: 10,
+    id: 11,
     name: "เย็นตาโฟ",
     englishName: "Yentafo (Pink soup)",
     price: 50,
@@ -455,7 +463,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: noodleOptions,
   },
   {
-    id: 11,
+    id: 12,
     name: "เย็นตาโฟทะเล",
     englishName: "Seafood Yentafo (Pink soup)",
     price: 60,
@@ -465,7 +473,7 @@ export const menuItems: MenuItem[] = [
 
   
   {
-    id: 12,
+    id: 13,
     name: "เย็นตาโฟหมูกรอบ",
     englishName: "Crispy Pork Yentafo (Pink soup)",
     price: 60,
@@ -474,7 +482,7 @@ export const menuItems: MenuItem[] = [
   },
   
   {
-    id: 13,
+    id: 14,
     name: "เกาเหลา",
     englishName: "No-Noodle Soup (Gaolaou)",
     price: 50,
@@ -580,15 +588,9 @@ export const menuItems: MenuItem[] = [
     price: 20,
     station: "drink",
   },
-  {
-    id: 37,
-    name: "น้ำส้ม",
-    englishName: "Orange Juice",
-    price: 25,
-    station: "drink",
-  },
+  
 {
-    id: 38,
+    id: 37,
     name: "น้ำฝรั่ง",
     englishName: "Guava Juice",
     price: 25,
@@ -716,9 +718,16 @@ export const menuItems: MenuItem[] = [
     station: "rice",
     optionGroups: Crispymenu,
   },
-
   {
     id: 94,
+    name: "ข้าวกุ้งผัดกะปิสะตอ",
+    englishName: "Stir-fried Shrimp with Shrimp Paste and Sa-taw on Rice",
+    price: 70,
+    station: "rice",
+    optionGroups: Crispymenu,
+  },
+  {
+    id: 95,
     name: "ข้าวผัดต้มยำ",
     englishName: "Tom Yum Fried Rice",
     price: 50,
@@ -726,7 +735,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: riceSpicyOptions,
   },
   {
-    id: 95,
+    id: 96,
     name: "ข้าวผัด",
     englishName: "Fried Rice",
     price: 60,
@@ -800,10 +809,18 @@ export const menuItems: MenuItem[] = [
     optionGroups: simpleTakeawayOptions,
   },
   {
+    id: 108,
+    name: "ข้าวต้ม",
+    englishName: "Rice congee",
+    price: 50,
+    station: "rice",
+    optionGroups: riceNoSpicyOptions,
+  },
+  {
     id: 110,
     name: "หมูกรอบ 1 ขีด น้ำจิ้มซีฟู้ด",
     englishName: "Crispy Pork with seafood sauce",
-    price: 60,
+    price: 70,
     station: "rice",
     optionGroups: simpleTakeawayOptions,
   },
