@@ -400,6 +400,14 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 4,
+    name: "ก๋วยเตี๋ยวหมูน้ำใส",
+    englishName: "Clear Soup Pork Noodles",
+    price: 50,
+    station: "noodle",
+    optionGroups: noodleOptions,
+  },
+  {
+    id: 5,
     name: "ก๋วยเตี๋ยวหมูตุ๋น",
     englishName: "Braised Pork Noodles",
     price: 50,
@@ -407,7 +415,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: noodleOptions,
   },
   {
-    id: 5,
+    id: 6,
     name: "ก๋วยเตี๋ยวต้มยำหมู",
     englishName: "Pork Tom Yum Noodles",
     price: 50,
@@ -415,7 +423,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: noodleOptions,
   },
   {
-    id: 6,
+    id: 7,
     name: "ก๋วยเตี๋ยวต้มยำหมูกรอบ",
     englishName: "Crispy Pork Tom Yum Noodles",
     price: 60,
@@ -423,7 +431,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: noodleOptions,
   },
   {
-    id: 7,
+    id: 8,
     name: "ก๋วยเตี๋ยวต้มยำไก่กรอบ",
     englishName: "Crispy Chicken Tom Yum Noodles",
     price: 50,
@@ -431,7 +439,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: noodleOptions,
   },
   {
-    id: 8,
+    id: 9,
     name: "ก๋วยเตี๋ยวต้มยำไก่",
     englishName: "Chicken Tom Yum Noodles",
     price: 50,
@@ -439,7 +447,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: noodleOptions,
   },
   {
-    id: 9,
+    id: 10,
     name: "เย็นตาโฟ",
     englishName: "Yentafo (Pink soup)",
     price: 50,
@@ -447,7 +455,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: noodleOptions,
   },
   {
-    id: 10,
+    id: 11,
     name: "เย็นตาโฟทะเล",
     englishName: "Seafood Yentafo (Pink soup)",
     price: 60,
@@ -457,7 +465,7 @@ export const menuItems: MenuItem[] = [
 
   
   {
-    id: 11,
+    id: 12,
     name: "เย็นตาโฟหมูกรอบ",
     englishName: "Crispy Pork Yentafo (Pink soup)",
     price: 60,
@@ -466,121 +474,121 @@ export const menuItems: MenuItem[] = [
   },
   
   {
-    id: 12,
-    name: "ก๋วยเตี๋ยวหมูน้ำใส",
-    englishName: "Clear Soup Pork Noodles",
+    id: 13,
+    name: "เกาเหลา",
+    englishName: "No-Noodle Soup (Gaolaou)",
     price: 50,
     station: "noodle",
-    optionGroups: noodleOptions,
+    optionGroups: NoodlesSoup1,
   },
   
   {
-    id: 15,
+    id: 23,
     name: "น้ำเปล่า",
     englishName: "Drinking Water",
     price: 10,
     station: "drink",
   },
   {
-    id: 16,
+    id: 24,
     name: "โค้ก",
     englishName: "Coke",
     price: 20,
     station: "drink",
   },
   {
-    id: 17,
+    id: 25,
     name: "น้ำแดง",
     englishName: "Red Soda",
     price: 20,
     station: "drink",
   },
   {
-    id: 18,
+    id: 26,
     name: "น้ำเขียว",
     englishName: "Green Soda",
     price: 20,
     station: "drink",
   },
   {
-    id: 19,
+    id: 27,
     name: "น้ำส้ม",
     englishName: "Orange Soda",
     price: 20,
     station: "drink",
   },
   {
-    id: 20,
+    id: 28,
     name: "ชเวปส์มะนาว",
     englishName: "Schweppes lemon soda",
     price: 20,
     station: "drink",
   },
   {
-    id: 21,
+    id: 29,
     name: "สไปร์ท",
     englishName: "Sprite",
     price: 20,
     station: "drink",
   },
   {
-    id: 22,
+    id: 30,
     name: "โออิชิน้ำผึ้งมะนาว",
     englishName: "Oishi Honey Lemon",
     price: 20,
     station: "drink",
   },
   {
-    id: 23,
+    id: 31,
     name: "โค้กซีโร่ ขวดเล็ก",
     englishName: "Coke Zero (small)",
     price: 10,
     station: "drink",
   },
   {
-    id: 24,
+    id: 32,
     name: "เก๊กฮวย",
     englishName: "Iced Chrysanthemum Tea",
     price: 20,
     station: "drink",
   },
   {
-    id: 25,
+    id: 33,
     name: "ชาไทย",
     englishName: "Iced Thai Tea (Sweet)",
     price: 20,
     station: "drink",
   },
   {
-    id: 26,
+    id: 34,
     name: "ชามะนาว",
     englishName: "Lemon Tea",
     price: 20,
     station: "drink",
   },
   {
-    id: 27,
+    id: 35,
     name: "โอเลี้ยง",
     englishName: "Thai Iced Black Coffee (Oliang)",
     price: 20,
     station: "drink",
   },
   {
-    id: 28,
+    id: 36,
     name: "ชาดำเย็น",
     englishName: "Thai Iced Black Tea",
     price: 20,
     station: "drink",
   },
   {
-    id: 29,
+    id: 37,
     name: "น้ำส้ม",
     englishName: "Orange Juice",
     price: 25,
     station: "drink",
   },
 {
-    id: 30,
+    id: 38,
     name: "น้ำฝรั่ง",
     englishName: "Guava Juice",
     price: 25,
@@ -588,7 +596,7 @@ export const menuItems: MenuItem[] = [
   },
 
   {
-    id: 49,
+    id: 45,
     name: "น้ำแข็ง",
     englishName: "Ice",
     price: 0,
@@ -596,7 +604,7 @@ export const menuItems: MenuItem[] = [
   },
 
   {
-    id: 50,
+    id: 70,
     name: "ข้าวกะเพรา",
     englishName: "Ka-pao with rice",
     price: 50,
@@ -604,7 +612,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: riceSpicyOptions,
   },
   {
-    id: 51,
+    id: 71,
     name: "ข้าวกระเทียม",
     englishName: "Garlic Stir fried with rice",
     price: 50,
@@ -612,7 +620,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: riceNoSpicyOptions,
   },
   {
-    id: 52,
+    id: 72,
     name: "ข้าวพริกแกง",
     englishName: "Stir-fried Red Curry with Rice",
     price: 50,
@@ -620,7 +628,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: riceSpicyOptions,
   },
   {
-    id: 53,
+    id: 73,
     name: "ข้าวพริกเผา",
     englishName: "Stir-fried Chili Paste with Rice",
     price: 50,
@@ -628,7 +636,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: riceSpicyOptions,
   },
   {
-    id: 54,
+    id: 74,
     name: "ข้าวกะเพราหน่อไม้",
     englishName: "Stir-fried Holy Basil with Bamboo Shoots and Rice",
     price: 50,
@@ -636,7 +644,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: riceSpicyOptions,
   },
   {
-    id: 55,
+    id: 75,
     name: "ข้าวผัดคะน้า",
     englishName: "Chinese Broccoli with Rice",
     price: 50,
@@ -644,7 +652,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: riceSpicyOptions,
   },
   {
-    id: 56,
+    id: 76,
     name: "ข้าวพริกสด",
     englishName: "Stir-fried Chili with Rice",
     price: 50,
@@ -652,7 +660,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: riceNoSpicyOptions,
   },
   {
-    id: 57,
+    id: 77,
     name: "ข้าวคั่วพริกเกลือ",
     englishName: "Stir-fried Chili and Salt with Rice",
     price: 50,
@@ -660,7 +668,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: riceSpicyOptions,
   },
   {
-    id: 58,
+    id: 78,
     name: "ข้าวผัดผักบุ้ง",
     englishName: "Stir-fried Morning Glory with Rice",
     price: 50,
@@ -669,7 +677,7 @@ export const menuItems: MenuItem[] = [
   },
 
   {
-    id: 59,
+    id: 79,
     name: "ข้าวผัดผักกาดขาว",
     englishName: "Stir-fried Cabbage with Rice",
     price: 50,
@@ -677,7 +685,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: riceSpicyOptions,
   },
   {
-    id: 60,
+    id: 90,
     name: "ข้าวไก่ทอดกรอบ",
     englishName: "Chicken Fried with Rice",
     price: 50,
@@ -685,7 +693,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: Crispymenu,
   },
   {
-    id: 61,
+    id: 91,
     name: "ข้าวหมูกรอบทอด",
     englishName: "Crispy pork with Rice",
     price: 60,
@@ -693,7 +701,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: Crispymenu,
   },
   {
-    id: 62,
+    id: 92,
     name: "ข้าวหมูสามชั้นผัดกะปิชะอม",
     englishName: "Stir-fried Pork Belly with Shrimp Paste and Acacia Leaves on Rice",
     price: 60,
@@ -701,7 +709,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: Crispymenu,
   },
   {
-    id: 63,
+    id: 93,
     name: "ข้าวกุ้งผัดกะปิชะอม",
     englishName: "Stir-fried Shrimp with Shrimp Paste and Acacia Leaves on Rice",
     price: 70,
@@ -710,7 +718,7 @@ export const menuItems: MenuItem[] = [
   },
 
   {
-    id: 64,
+    id: 94,
     name: "ข้าวผัดต้มยำ",
     englishName: "Tom Yum Fried Rice",
     price: 50,
@@ -718,7 +726,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: riceSpicyOptions,
   },
   {
-    id: 91,
+    id: 95,
     name: "ข้าวผัด",
     englishName: "Fried Rice",
     price: 60,
@@ -728,7 +736,7 @@ export const menuItems: MenuItem[] = [
 
 
   {
-    id: 92,
+    id: 100,
     name: "สุกี้น้ำ",
     englishName: "Sukiyaki with Soup",
     price: 60,
@@ -736,7 +744,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: sukiOptions,
   },
   {
-    id: 93,
+    id: 101,
     name: "สุกี้แห้ง",
     englishName: "Stir-fried Sukiyaki (Dry)",
     price: 60,
@@ -744,7 +752,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: sukiOptions,
   },
   {
-    id: 94,
+    id: 102,
     name: "เส้นใหญ่ผัดซีอิ๊ว",
     englishName: "Stir-fried Large Rice Noodles with Soy Sauce (Pad See Ew)",
     price: 50,
@@ -752,7 +760,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: riceSimpleOptions,
   },
   {
-    id: 95,
+    id: 103,
     name: "เส้นหมี่ผัดซีอิ๊ว",
     englishName: "Stir-fried Rice Vermicelli with Soy Sauce (Pad See Ew)",
     price: 50,
@@ -760,7 +768,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: riceSimpleOptions,
   },
   {
-    id: 96,
+    id: 104,
     name: "ข้าวไข่เจียว 2 ฟอง",
     englishName: "2 Omelets with rice",
     price: 40,
@@ -768,7 +776,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: simpleTakeawayOptions,
   },
   {
-    id: 97,
+    id: 105,
     name: "ข้าวไข่เจียวหมูสับ",
     englishName: "minced-pork Omelets with rice",
     price: 50,
@@ -776,7 +784,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: simpleTakeawayOptions,
   },
   {
-    id: 98,
+    id: 106,
     name: "ข้าวไข่เจียวเนื้อสับ",
     englishName: "minced-beef Omelets with rice",
     price: 60,
@@ -784,7 +792,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: simpleTakeawayOptions,
   },
   {
-    id: 99,
+    id: 107,
     name: "ข้าวไข่เจียวทะเล",
     englishName: "Seafood Omelets with rice",
     price: 60,
@@ -792,21 +800,14 @@ export const menuItems: MenuItem[] = [
     optionGroups: simpleTakeawayOptions,
   },
   {
-    id: 100,
+    id: 110,
     name: "หมูกรอบ 1 ขีด น้ำจิ้มซีฟู้ด",
     englishName: "Crispy Pork with seafood sauce",
     price: 60,
     station: "rice",
     optionGroups: simpleTakeawayOptions,
   },
-  {
-    id: 500,
-    name: "เกาเหลา",
-    englishName: "No-Noodle Soup (Gaolaou)",
-    price: 50,
-    station: "noodle",
-    optionGroups: NoodlesSoup1,
-  },
+  
 
   {
     id: 200,
