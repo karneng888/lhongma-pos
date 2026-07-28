@@ -272,6 +272,13 @@ const Crispymenu: MenuOptionGroup[] = [
   takeawayOptions,
 ];
 
+const NomainPritein: MenuOptionGroup[] = [
+  foodTypeOptions,
+  extraOptions,
+  eggOptions,
+  takeawayOptions,
+];
+
 // ใช้กับสุกี้ อาจเลือกเนื้อสัตว์ได้ แต่ไม่มีไข่ / ไม่มีเป็นกับข้าว / ไม่มีระดับเผ็ด
 const sukiOptions: MenuOptionGroup[] = [
   mainProteinOptionsSuki,
@@ -708,7 +715,7 @@ export const menuItems: MenuItem[] = [
     englishName: "Stir-fried Pork Belly with Shrimp Paste and Acacia Leaves on Rice",
     price: 60,
     station: "rice",
-    optionGroups: Crispymenu,
+    optionGroups: NomainPritein,
   },
   {
     id: 93,
@@ -716,7 +723,7 @@ export const menuItems: MenuItem[] = [
     englishName: "Stir-fried Shrimp with Shrimp Paste and Acacia Leaves on Rice",
     price: 70,
     station: "rice",
-    optionGroups: Crispymenu,
+    optionGroups: NomainPritein,
   },
   {
     id: 94,
@@ -724,7 +731,7 @@ export const menuItems: MenuItem[] = [
     englishName: "Stir-fried Shrimp with Shrimp Paste and Sa-taw on Rice",
     price: 70,
     station: "rice",
-    optionGroups: Crispymenu,
+    optionGroups: NomainPritein,
   },
   {
     id: 95,
