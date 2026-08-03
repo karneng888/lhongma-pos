@@ -35,6 +35,7 @@ const mainProteinOptions: MenuOptionGroup = {
     { id: "chicken-organs", name: "เครื่องในไก่", englishName: "Chicken Giblets", price: 0 },
     { id: "pork-liver", name: "ตับหมู", englishName: "Pork Liver",  price: 0 },
     { id: "crispy-pork", name: "หมูกรอบ", englishName: "Crispy Pork",  price: 10 },
+    { id: "catfish", name: "ปลาดุก", englishName: "catfish", price: 0 },
     { id: "seafood", name: "ทะเล", englishName: "Seafood",  price: 10 },
     { id: "minced-beef", name: "เนื้อสับ", englishName: "Minced Beef",  price: 5 },
     { id: "sliced-beef", name: "เนื้อชิ้น", englishName: "Sliced Beef",  price: 5 },
@@ -93,6 +94,7 @@ const mainProteinOptionsFriedRice: MenuOptionGroup = {
   options: [
     { id: "minced-pork", name: "หมูสับ", englishName: "Minced Pork", price: 0 },
     { id: "sliced-pork", name: "หมูชิ้น", englishName: "Sliced Pork", price: 0 },
+    { id: "sweet-chinese", name: "กุนเชียง", englishName: "Sweet Chinese", price: 0 },
     { id: "chicken", name: "ไก่", englishName: "Chicken", price: 0 },
     { id: "chicken-organs", name: "เครื่องในไก่", englishName: "Chicken Giblets", price: 0 },
     { id: "crispy-pork", name: "หมูกรอบ", englishName: "Crispy Pork",  price: 5 },
@@ -146,6 +148,7 @@ const addProteinOptions: MenuOptionGroup = {
     { id: "add-minced-pork", name: "เพิ่มหมูสับ", englishName: "Add Minced-Pork", price: 10, stockId: "minced-pork" },
     { id: "add-sliced-pork", name: "เพิ่มหมูชิ้น", price: 10, englishName: "Add Sliced pork", stockId: "sliced-pork" },
     { id: "add-chicken", name: "เพิ่มไก่", price: 10, englishName: "Add Chicken", stockId: "chicken" },
+    { id: "add-catfish", name: "เพิ่มหมูสับ", englishName: "Add catfish", price: 10, stockId: "catfish" },
     { id: "add-chicken-organs", name: "เพิ่มเครื่องในไก่", englishName: "Add chicken-organs", price: 10, stockId: "chicken-organs" },
     { id: "add-pork-liver", name: "เพิ่มตับหมู", englishName: "Add Pork liver", price: 10, stockId: "pork-liver" },
     { id: "add-crispy-pork", name: "เพิ่มหมูกรอบ", englishName: "Add Crispy-pork", price: 15, stockId: "crispy-pork" },
@@ -528,7 +531,7 @@ export const menuItems: MenuItem[] = [
   {
     id: 27,
     name: "น้ำส้ม",
-    englishName: "Orange Soda",
+    englishName: "Orange Juice",
     price: 20,
     station: "drink",
   },
@@ -689,6 +692,15 @@ export const menuItems: MenuItem[] = [
     id: 79,
     name: "ข้าวผัดผักกาดขาว",
     englishName: "Stir-fried Cabbage with Rice",
+    price: 50,
+    station: "rice",
+    optionGroups: riceSpicyOptions,
+  },
+
+  {
+    id: 80,
+    name: "ข้าวผัดฉ่า",
+    englishName: "Stir-fried spicy with Rice",
     price: 50,
     station: "rice",
     optionGroups: riceSpicyOptions,

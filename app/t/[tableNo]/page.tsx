@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { menuItems, MenuItem, MenuOption } from "@/app/data/menu";
 import { supabase } from "@/app/lib/supabase";
 
@@ -103,6 +103,12 @@ export default function TableOrderPage() {
     new Map()
   );
 
+  // สถานะเปิด/ปิดเมนูจากตาราง menu_status
+  const [menuStatusMap, setMenuStatusMap] = useState<Map<number, boolean>>(
+    new Map()
+  );
+  const [isMenuStatusLoading, setIsMenuStatusLoading] = useState(true);
+
   const optionTotal = selectedOptions.reduce(
     (sum, option) => sum + option.price,
     0
@@ -115,10 +121,18 @@ export default function TableOrderPage() {
     0
   );
 
+  // ซ่อนเมนูที่ถูกปิดใน Supabase
+  // ถ้าเมนูยังไม่มีแถวใน menu_status จะถือว่ายังเปิดอยู่
+  const availableMenuItems = menuItems.filter(
+    (item) => menuStatusMap.get(item.id) !== false
+  );
+
   const filteredMenuItems =
     activeCategory === "all"
-      ? menuItems
-      : menuItems.filter((item) => item.station === activeCategory);
+      ? availableMenuItems
+      : availableMenuItems.filter(
+          (item) => item.station === activeCategory
+        );
 
   const openMenu = (item: MenuItem) => {
   const defaultOpenGroups: Record<string, boolean> = {};
@@ -436,6 +450,29 @@ export default function TableOrderPage() {
     await loadSubmittedOrders(currentSessionId);
   };
 
+  const loadMenuStatus = async () => {
+    setIsMenuStatusLoading(true);
+
+    const { data, error } = await supabase
+      .from("menu_status")
+      .select("menu_id, is_available");
+
+    if (error) {
+      console.error("โหลดสถานะเมนูไม่สำเร็จ:", error);
+      setIsMenuStatusLoading(false);
+      return;
+    }
+
+    const map = new Map<number, boolean>();
+
+    (data || []).forEach((item) => {
+      map.set(Number(item.menu_id), item.is_available);
+    });
+
+    setMenuStatusMap(map);
+    setIsMenuStatusLoading(false);
+  };
+
   const loadOptionStatus = async () => {
     const { data, error } = await supabase.from("option_status").select("*");
 
@@ -454,6 +491,7 @@ export default function TableOrderPage() {
   };
 
   useEffect(() => {
+    loadMenuStatus();
     loadOptionStatus();
     loadTableSession();
   }, []);
@@ -468,7 +506,7 @@ export default function TableOrderPage() {
     return () => clearInterval(timer);
   }, [currentSessionId, isSessionBlocked]);
 
-  if (isSessionLoading) {
+  if (isSessionLoading || isMenuStatusLoading) {
     return (
       <main className="min-h-screen bg-orange-50 p-4">
         <div className="mx-auto max-w-3xl rounded-3xl bg-white p-6 text-center shadow">
