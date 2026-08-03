@@ -294,7 +294,10 @@ const simpleTakeawayOptions: MenuOptionGroup[] = [
   takeawayOptions,
 ];
 
-
+const simpleOptions: MenuOptionGroup[] = [
+  foodTypeOptions,
+  takeawayOptions,
+]
 
 const noodleOptions: MenuOptionGroup[] = [
   
@@ -827,8 +830,35 @@ export const menuItems: MenuItem[] = [
     station: "rice",
     optionGroups: simpleTakeawayOptions,
   },
+
   {
     id: 108,
+    name: "ไข่เจียวหมูสับ(กับข้าว)",
+    englishName: "mince pork Omelets (Dish)",
+    price: 50,
+    station: "rice",
+    optionGroups: simpleTakeawayOptions,
+  },
+
+  {
+    id: 109,
+    name: "ไข่เจียวเนื้อสับ(กับข้าว)",
+    englishName: "mince beef Omelets (Dish)",
+    price: 60,
+    station: "rice",
+    optionGroups: simpleTakeawayOptions,
+  },
+
+  {
+    id: 110,
+    name: "ไข่เจียวทะเล(กับข้าว)",
+    englishName: "Seafood Omelets (Dish)",
+    price: 60,
+    station: "rice",
+    optionGroups: simpleTakeawayOptions,
+  },
+  {
+    id: 129,
     name: "ข้าวต้ม",
     englishName: "Rice congee",
     price: 50,
@@ -836,7 +866,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: riceNoSpicyOptions,
   },
   {
-    id: 110,
+    id: 130,
     name: "หมูกรอบ 1 ขีด น้ำจิ้มซีฟู้ด",
     englishName: "Crispy Pork with seafood sauce",
     price: 70,
