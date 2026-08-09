@@ -708,6 +708,15 @@ export const menuItems: MenuItem[] = [
     station: "rice",
     optionGroups: riceSpicyOptions,
   },
+{
+    id: 81,
+    name: "ข้าวผัดขี้เมา",
+    englishName: "Pad kee mao spicy with Rice",
+    price: 50,
+    station: "rice",
+    optionGroups: riceSpicyOptions,
+  },
+
   {
     id: 90,
     name: "ข้าวไก่ทอดกรอบ",

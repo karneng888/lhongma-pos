@@ -736,6 +736,42 @@ if (hasMainProtein && !selectedMainProtein) {
     setIsAddItemOpen(false);
   }, 800);
 };
+
+  const reprintKitchenTicket = async () => {
+    if (!selectedTable) {
+      alert("กรุณาเลือกโต๊ะก่อนค่ะ");
+      return;
+    }
+
+    if (selectedItems.length === 0) {
+      alert("ไม่มีรายการอาหารในโต๊ะนี้ค่ะ");
+      return;
+    }
+
+    const confirmed = confirm(
+      `ต้องการพิมพ์ใบครัวของ ${getTableName(selectedTable)} ซ้ำทั้งหมดใช่ไหม?`
+    );
+
+    if (!confirmed) return;
+
+    const itemIds = selectedItems.map((item) => item.id);
+
+    const { error } = await supabase
+      .from("orders")
+      .update({ kitchen_printed: false })
+      .in("id", itemIds)
+      .eq("paid", false);
+
+    if (error) {
+      console.error(error);
+      alert("สั่งพิมพ์ใบครัวซ้ำไม่สำเร็จ: " + error.message);
+      return;
+    }
+
+    alert("ส่งรายการไปพิมพ์ใบครัวซ้ำแล้วค่ะ");
+    await loadOrders();
+  };
+
   const payAndPrint = async () => {
     if (!selectedTable) {
       alert("กรุณาเลือกโต๊ะก่อนค่ะ");
@@ -1115,6 +1151,14 @@ if (hasMainProtein && !selectedMainProtein) {
     {kitchenSendMessage}
   </p>
 )}
+
+                <button
+                  onClick={reprintKitchenTicket}
+                  className="mt-3 w-full rounded-xl bg-blue-600 p-4 text-lg font-bold text-white hover:bg-blue-700"
+                >
+                  🖨 พิมพ์ใบครัวซ้ำ
+                </button>
+
                 <button
                   onClick={payAndPrint}
                   className="mt-6 w-full rounded-xl bg-green-600 p-4 text-xl font-bold text-white hover:bg-green-300"

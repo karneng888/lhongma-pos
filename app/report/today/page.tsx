@@ -26,6 +26,18 @@ type PaidOrder = {
   change_amount?: number | null;
   created_at: string;
   options?: PaidOrderOption[] | string | null;
+  note?: string | null;
+};
+
+type Bill = {
+  receiptNo: string;
+  tableNo: string;
+  paidAt: string;
+  paymentMethod: string;
+  cashReceived: number;
+  changeAmount: number;
+  total: number;
+  items: PaidOrder[];
 };
 
 function getItemUnitPrice(item: PaidOrder) {
@@ -41,6 +53,7 @@ function getTableName(tableNo: string) {
   if (tableNo === "takeaway") return "กลับบ้าน";
   return `โต๊ะ ${tableNo}`;
 }
+
 function normalizeOptionText(value?: string) {
   return (value || "")
     .toLowerCase()
@@ -157,11 +170,13 @@ function getReportMenuName(item: PaidOrder) {
 
   return `${baseName}${proteinName}`;
 }
+
 export default function TodayReportPage() {
   const [orders, setOrders] = useState<PaidOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAllowed, setIsAllowed] = useState(false);
-  
+  const [reprintBill, setReprintBill] = useState<Bill | null>(null);
+
   async function loadTodaySales() {
     setLoading(true);
 
@@ -171,7 +186,7 @@ export default function TodayReportPage() {
 
     const { data, error } = await supabase
       .from("orders")
-.select("*")
+      .select("*")
       .eq("paid", true)
       .gte("paid_at", start.toISOString())
       .lt("paid_at", end.toISOString())
@@ -193,15 +208,27 @@ export default function TodayReportPage() {
   }, []);
 
   useEffect(() => {
-  const isLogin = sessionStorage.getItem("lhongma-admin-login");
+    const isLogin = sessionStorage.getItem("lhongma-admin-login");
 
-  if (isLogin !== "yes") {
-    window.location.href = "/login";
-    return;
-  }
+    if (isLogin !== "yes") {
+      window.location.href = "/login";
+      return;
+    }
 
-  setIsAllowed(true);
-}, []);
+    setIsAllowed(true);
+  }, []);
+
+  useEffect(() => {
+    const handleAfterPrint = () => {
+      setReprintBill(null);
+    };
+
+    window.addEventListener("afterprint", handleAfterPrint);
+
+    return () => {
+      window.removeEventListener("afterprint", handleAfterPrint);
+    };
+  }, []);
 
   const summary = useMemo(() => {
     const totalSales = orders.reduce((sum, item) => {
@@ -214,13 +241,24 @@ export default function TodayReportPage() {
 
     const cashSales = orders
       .filter((item) => item.payment_method === "cash")
-      .reduce((sum, item) => sum + getItemUnitPrice(item) * Number(item.qty || 1), 0);
+      .reduce(
+        (sum, item) =>
+          sum + getItemUnitPrice(item) * Number(item.qty || 1),
+        0
+      );
 
     const transferSales = orders
       .filter((item) => item.payment_method === "transfer")
-      .reduce((sum, item) => sum + getItemUnitPrice(item) * Number(item.qty || 1), 0);
+      .reduce(
+        (sum, item) =>
+          sum + getItemUnitPrice(item) * Number(item.qty || 1),
+        0
+      );
 
-    const itemQty = orders.reduce((sum, item) => sum + Number(item.qty || 1), 0);
+    const itemQty = orders.reduce(
+      (sum, item) => sum + Number(item.qty || 1),
+      0
+    );
 
     return {
       totalSales,
@@ -253,7 +291,7 @@ export default function TodayReportPage() {
         existing.total += total;
       } else {
         map.set(menuName, {
-        name: menuName,
+          name: menuName,
           qty,
           total,
         });
@@ -264,17 +302,7 @@ export default function TodayReportPage() {
   }, [orders]);
 
   const bills = useMemo(() => {
-    const map = new Map<
-      string,
-      {
-        receiptNo: string;
-        tableNo: string;
-        paidAt: string;
-        paymentMethod: string;
-        total: number;
-        items: PaidOrder[];
-      }
-    >();
+    const map = new Map<string, Bill>();
 
     orders.forEach((item) => {
       const receiptNo = item.receipt_no || `no-receipt-${item.id}`;
@@ -286,6 +314,8 @@ export default function TodayReportPage() {
           tableNo: item.table_no,
           paidAt: item.paid_at || item.created_at,
           paymentMethod: item.payment_method || "-",
+          cashReceived: Number(item.cash_received || 0),
+          changeAmount: Number(item.change_amount || 0),
           total: 0,
           items: [],
         });
@@ -299,21 +329,58 @@ export default function TodayReportPage() {
     });
 
     return Array.from(map.values()).sort(
-      (a, b) => new Date(b.paidAt).getTime() - new Date(a.paidAt).getTime()
+      (a, b) =>
+        new Date(b.paidAt).getTime() - new Date(a.paidAt).getTime()
     );
   }, [orders]);
+
+  const handleReprint = (bill: Bill) => {
+    setReprintBill(bill);
+
+    // รอ React render ส่วน print-only ก่อนเปิดหน้าต่างพิมพ์
+    setTimeout(() => {
+      window.print();
+    }, 200);
+  };
+
   if (!isAllowed) {
-  return (
-    <main className="flex min-h-screen items-center justify-center bg-orange-50 text-gray-900">
-      <div className="rounded-2xl bg-white p-6 font-bold shadow">
-        กำลังตรวจสอบสิทธิ์...
-      </div>
-    </main>
-  );
-}
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-orange-50 text-gray-900">
+        <div className="rounded-2xl bg-white p-6 font-bold shadow">
+          กำลังตรวจสอบสิทธิ์...
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-orange-50 p-4 text-gray-900">
-      <div className="mx-auto max-w-6xl">
+      <style jsx global>{`
+        @media print {
+          body {
+            background: white;
+          }
+
+          .no-print {
+            display: none !important;
+          }
+
+          .print-only {
+            display: block !important;
+          }
+
+          @page {
+            size: 80mm auto;
+            margin: 4mm;
+          }
+        }
+
+        .print-only {
+          display: none;
+        }
+      `}</style>
+
+      <div className="no-print mx-auto max-w-6xl">
         <div className="rounded-2xl bg-white p-5 shadow">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
@@ -440,8 +507,11 @@ export default function TodayReportPage() {
               ) : (
                 <div className="mt-4 space-y-3">
                   {bills.map((bill) => (
-                    <div key={bill.receiptNo} className="rounded-2xl border p-4">
-                      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                    <div
+                      key={bill.receiptNo}
+                      className="rounded-2xl border p-4"
+                    >
+                      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                         <div>
                           <p className="text-lg font-bold">
                             {getTableName(bill.tableNo)}
@@ -457,17 +527,27 @@ export default function TodayReportPage() {
                           </p>
                         </div>
 
-                        <div className="text-right">
-                          <p className="text-2xl font-bold text-orange-700">
-                            {bill.total.toFixed(0)}฿
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            {bill.paymentMethod === "cash"
-                              ? "เงินสด"
-                              : bill.paymentMethod === "transfer"
-                              ? "โอน"
-                              : "-"}
-                          </p>
+                        <div className="flex flex-col items-start gap-2 md:items-end">
+                          <div className="text-left md:text-right">
+                            <p className="text-2xl font-bold text-orange-700">
+                              {bill.total.toFixed(0)}฿
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              {bill.paymentMethod === "cash"
+                                ? "เงินสด"
+                                : bill.paymentMethod === "transfer"
+                                ? "โอน"
+                                : "-"}
+                            </p>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => handleReprint(bill)}
+                            className="rounded-xl bg-blue-600 px-4 py-2 font-bold text-white shadow hover:bg-blue-700"
+                          >
+                            🖨 พิมพ์ซ้ำ
+                          </button>
                         </div>
                       </div>
 
@@ -481,7 +561,10 @@ export default function TodayReportPage() {
                               {getReportMenuName(item)} x{item.qty}
                             </span>
                             <span>
-                              {(getItemUnitPrice(item) * item.qty).toFixed(0)}฿
+                              {(
+                                getItemUnitPrice(item) * item.qty
+                              ).toFixed(0)}
+                              ฿
                             </span>
                           </div>
                         ))}
@@ -494,6 +577,114 @@ export default function TodayReportPage() {
           </>
         )}
       </div>
+
+      {reprintBill && (
+        <div className="print-only font-mono text-[12px] leading-tight">
+          <div className="text-center">
+            <h1 className="text-xl font-bold">หลงมา</h1>
+            <p>ก๋วยเตี๋ยว / อาหารตามสั่ง</p>
+            <p>ขอบคุณที่อุดหนุนค่ะ</p>
+
+            <div className="mt-2 border border-black px-2 py-1 text-sm font-bold">
+              สำเนา / REPRINT
+            </div>
+          </div>
+
+          <div className="my-2 border-t border-dashed border-black" />
+
+          <div className="space-y-1">
+            <p>ใบเสร็จ: {reprintBill.receiptNo}</p>
+            <p>โต๊ะ/บิล: {getTableName(reprintBill.tableNo)}</p>
+            <p>
+              วันที่:{" "}
+              {new Date(reprintBill.paidAt).toLocaleString("th-TH", {
+                dateStyle: "short",
+                timeStyle: "short",
+              })}
+            </p>
+          </div>
+
+          <div className="my-2 border-t border-dashed border-black" />
+
+          <div className="space-y-2">
+            {reprintBill.items.map((item) => {
+              const unitPrice = getItemUnitPrice(item);
+              const lineTotal = unitPrice * item.qty;
+              const options = getOrderOptions(item);
+
+              return (
+                <div key={item.id}>
+                  <div className="flex justify-between gap-2">
+                    <div className="flex-1">
+                      <p className="font-bold">
+                        {item.name} x{item.qty}
+                      </p>
+                      <p className="text-[11px]">
+                        {unitPrice} x {item.qty}
+                      </p>
+                    </div>
+
+                    <p className="font-bold">{lineTotal}</p>
+                  </div>
+
+                  {options.length > 0 && (
+                    <div className="ml-2 mt-1">
+                      {options.map((option, index) => (
+                        <p key={index}>- {option.name}</p>
+                      ))}
+                    </div>
+                  )}
+
+                  {item.note && (
+                    <p className="ml-2 mt-1">
+                      * หมายเหตุ: {item.note}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="my-2 border-t border-dashed border-black" />
+
+          <div className="space-y-1">
+            <div className="flex justify-between text-base font-bold">
+              <span>รวมทั้งหมด</span>
+              <span>{reprintBill.total.toFixed(0)} บาท</span>
+            </div>
+
+            <div className="flex justify-between">
+              <span>ชำระโดย</span>
+              <span>
+                {reprintBill.paymentMethod === "cash"
+                  ? "เงินสด"
+                  : reprintBill.paymentMethod === "transfer"
+                  ? "โอน"
+                  : "-"}
+              </span>
+            </div>
+
+            <div className="flex justify-between">
+              <span>รับเงิน</span>
+              <span>{reprintBill.cashReceived.toFixed(0)} บาท</span>
+            </div>
+
+            {reprintBill.paymentMethod === "cash" && (
+              <div className="flex justify-between">
+                <span>เงินทอน</span>
+                <span>{reprintBill.changeAmount.toFixed(0)} บาท</span>
+              </div>
+            )}
+          </div>
+
+          <div className="my-2 border-t border-dashed border-black" />
+
+          <div className="text-center">
+            <p>ขอบคุณค่ะ</p>
+            <p>แล้วแวะมาอีกนะคะ</p>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
