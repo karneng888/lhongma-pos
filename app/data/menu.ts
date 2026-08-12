@@ -612,6 +612,14 @@ export const menuItems: MenuItem[] = [
   },
 
   {
+    id: 38,
+    name: "น้ำลำไย",
+    englishName: "Longan juice",
+    price: 20,
+    station: "drink",
+  },
+
+  {
     id: 45,
     name: "น้ำแข็ง",
     englishName: "Ice",
