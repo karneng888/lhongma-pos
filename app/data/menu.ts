@@ -291,6 +291,7 @@ const sukiOptions: MenuOptionGroup[] = [
 
 // ใช้กับเมนูที่ไม่ต้องมี option อะไรเยอะ เช่น ไข่เจียว / หมูกรอบ 1 ขีด
 const simpleTakeawayOptions: MenuOptionGroup[] = [
+  extraOptions,
   takeawayOptions,
 ];
 

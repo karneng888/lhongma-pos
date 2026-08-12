@@ -176,6 +176,14 @@ export default function TodayReportPage() {
   const [loading, setLoading] = useState(true);
   const [isAllowed, setIsAllowed] = useState(false);
   const [reprintBill, setReprintBill] = useState<Bill | null>(null);
+  const [editBill, setEditBill] = useState<Bill | null>(null);
+  const [editItems, setEditItems] = useState<PaidOrder[]>([]);
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [deletedItemIds, setDeletedItemIds] = useState<number[]>([]);
+
+  const [newItemName, setNewItemName] = useState("");
+  const [newItemPrice, setNewItemPrice] = useState("");
+  const [newItemQty, setNewItemQty] = useState("1");
 
   async function loadTodaySales() {
     setLoading(true);
@@ -342,6 +350,267 @@ export default function TodayReportPage() {
       window.print();
     }, 200);
   };
+
+  const openEditBill = (bill: Bill) => {
+    setEditBill(bill);
+    setEditItems(
+      bill.items.map((item) => ({
+        ...item,
+        qty: Number(item.qty || 1),
+        price: Number(item.price || 0),
+        item_total: Number(item.item_total || item.price || 0),
+      }))
+    );
+    setDeletedItemIds([]);
+    setNewItemName("");
+    setNewItemPrice("");
+    setNewItemQty("1");
+  };
+
+  const closeEditBill = () => {
+    if (savingEdit) return;
+    setEditBill(null);
+    setEditItems([]);
+    setDeletedItemIds([]);
+    setNewItemName("");
+    setNewItemPrice("");
+    setNewItemQty("1");
+  };
+
+  const changeEditItemQty = (id: number, nextQty: number) => {
+    if (nextQty < 1) return;
+
+    setEditItems((current) =>
+      current.map((item) =>
+        item.id === id ? { ...item, qty: nextQty } : item
+      )
+    );
+  };
+
+  const changeEditItemName = (id: number, name: string) => {
+    setEditItems((current) =>
+      current.map((item) => (item.id === id ? { ...item, name } : item))
+    );
+  };
+
+  const changeEditItemPrice = (id: number, value: string) => {
+    const nextPrice = Number(value);
+    if (Number.isNaN(nextPrice) || nextPrice < 0) return;
+
+    setEditItems((current) =>
+      current.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              price: nextPrice,
+              item_total: nextPrice,
+            }
+          : item
+      )
+    );
+  };
+
+  const deletePaidItem = (item: PaidOrder) => {
+    if (!editBill) return;
+
+    const ok = window.confirm(
+      `ลบ "${getReportMenuName(item)}" ออกจากบิล ${editBill.receiptNo} ใช่ไหม?`
+    );
+    if (!ok) return;
+
+    if (item.id > 0) {
+      setDeletedItemIds((current) =>
+        current.includes(item.id) ? current : [...current, item.id]
+      );
+    }
+
+    setEditItems((current) => current.filter((row) => row.id !== item.id));
+  };
+
+  const addPaidItem = () => {
+    if (!editBill) return;
+
+    const name = newItemName.trim();
+    const price = Number(newItemPrice);
+    const qty = Number(newItemQty);
+
+    if (!name) {
+      alert("กรุณาใส่ชื่อรายการ");
+      return;
+    }
+
+    if (Number.isNaN(price) || price < 0) {
+      alert("กรุณาใส่ราคาให้ถูกต้อง");
+      return;
+    }
+
+    if (!Number.isInteger(qty) || qty < 1) {
+      alert("จำนวนต้องเป็น 1 ขึ้นไป");
+      return;
+    }
+
+    const tempItem: PaidOrder = {
+      id: -Date.now(),
+      table_no: editBill.tableNo,
+      name,
+      price,
+      qty,
+      item_total: price,
+      paid: true,
+      paid_at: editBill.paidAt,
+      receipt_no: editBill.receiptNo,
+      payment_method:
+        editBill.paymentMethod === "cash" ||
+        editBill.paymentMethod === "transfer"
+          ? editBill.paymentMethod
+          : null,
+      cash_received: Number(editBill.cashReceived || 0),
+      change_amount: Number(editBill.changeAmount || 0),
+      created_at: new Date().toISOString(),
+      options: [],
+      note: null,
+    };
+
+    setEditItems((current) => [...current, tempItem]);
+    setNewItemName("");
+    setNewItemPrice("");
+    setNewItemQty("1");
+  };
+
+  const saveEditedBill = async () => {
+    if (!editBill) return;
+
+    if (editItems.length === 0) {
+      alert(
+        "บิลนี้ไม่มีรายการเหลือแล้ว ถ้าต้องการยกเลิกทั้งบิล แนะนำทำปุ่ม VOID แยกต่างหาก เพื่อไม่ให้ข้อมูลประวัติหาย"
+      );
+      return;
+    }
+
+    const hasInvalidItem = editItems.some(
+      (item) =>
+        !item.name.trim() ||
+        Number(item.qty) < 1 ||
+        Number.isNaN(Number(item.item_total ?? item.price)) ||
+        Number(item.item_total ?? item.price) < 0
+    );
+
+    if (hasInvalidItem) {
+      alert("ตรวจสอบชื่อ ราคา และจำนวนของแต่ละรายการอีกครั้ง");
+      return;
+    }
+
+    setSavingEdit(true);
+
+    try {
+      // 1) ลบเฉพาะรายการเดิมที่ผู้ใช้กดลบ
+      if (deletedItemIds.length > 0) {
+        const { error: deleteError } = await supabase
+          .from("orders")
+          .delete()
+          .in("id", deletedItemIds);
+
+        if (deleteError) throw deleteError;
+      }
+
+      // 2) อัปเดตรายการเดิม
+      for (const item of editItems.filter((row) => row.id > 0)) {
+        const unitPrice = Number(item.item_total ?? item.price ?? 0);
+
+        const { error } = await supabase
+          .from("orders")
+          .update({
+            name: item.name.trim(),
+            qty: Number(item.qty || 1),
+            price: unitPrice,
+            item_total: unitPrice,
+          })
+          .eq("id", item.id);
+
+        if (error) throw error;
+      }
+
+      // 3) เพิ่มรายการใหม่เข้า receipt_no เดิม
+      const newItems = editItems.filter((row) => row.id < 0);
+
+      if (newItems.length > 0) {
+        const payload = newItems.map((item) => {
+          const unitPrice = Number(item.item_total ?? item.price ?? 0);
+
+          return {
+            table_no: editBill.tableNo,
+            name: item.name.trim(),
+            price: unitPrice,
+            qty: Number(item.qty || 1),
+            item_total: unitPrice,
+            paid: true,
+            paid_at: editBill.paidAt,
+            receipt_no: editBill.receiptNo,
+            payment_method:
+              editBill.paymentMethod === "cash" ||
+              editBill.paymentMethod === "transfer"
+                ? editBill.paymentMethod
+                : null,
+            cash_received: Number(editBill.cashReceived || 0),
+            change_amount: Number(editBill.changeAmount || 0),
+            options: [],
+            note: null,
+          };
+        });
+
+        const { error: insertError } = await supabase
+          .from("orders")
+          .insert(payload);
+
+        if (insertError) {
+          throw new Error(
+            insertError.message +
+              " | ถ้า orders มี column บังคับอื่น ๆ ส่ง error นี้มาให้ฉัน เดี๋ยวเติม field ให้ตรงฐานข้อมูลร้านหลงมา"
+          );
+        }
+      }
+
+      const newTotal = editItems.reduce(
+        (sum, item) =>
+          sum +
+          Number(item.item_total ?? item.price ?? 0) *
+            Number(item.qty || 1),
+        0
+      );
+
+      const nextChange =
+        editBill.paymentMethod === "cash"
+          ? Math.max(Number(editBill.cashReceived || 0) - newTotal, 0)
+          : 0;
+
+      const { error: paymentError } = await supabase
+        .from("orders")
+        .update({
+          change_amount: nextChange,
+        })
+        .eq("receipt_no", editBill.receiptNo);
+
+      if (paymentError) throw paymentError;
+
+      await loadTodaySales();
+      setEditBill(null);
+      setEditItems([]);
+      setDeletedItemIds([]);
+      alert("แก้ไขบิลเรียบร้อยแล้ว");
+    } catch (error: any) {
+      console.error(error);
+      alert("บันทึกการแก้ไขไม่สำเร็จ: " + (error?.message || error));
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  const editBillTotal = editItems.reduce(
+    (sum, item) =>
+      sum +
+      Number(item.item_total ?? item.price ?? 0) * Number(item.qty || 1),
+    0
+  );
 
   if (!isAllowed) {
     return (
@@ -541,13 +810,23 @@ export default function TodayReportPage() {
                             </p>
                           </div>
 
-                          <button
-                            type="button"
-                            onClick={() => handleReprint(bill)}
-                            className="rounded-xl bg-blue-600 px-4 py-2 font-bold text-white shadow hover:bg-blue-700"
-                          >
-                            🖨 พิมพ์ซ้ำ
-                          </button>
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              type="button"
+                              onClick={() => openEditBill(bill)}
+                              className="rounded-xl bg-amber-500 px-4 py-2 font-bold text-white shadow hover:bg-amber-600"
+                            >
+                              ✏️ แก้ไขบิล
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleReprint(bill)}
+                              className="rounded-xl bg-blue-600 px-4 py-2 font-bold text-white shadow hover:bg-blue-700"
+                            >
+                              🖨 พิมพ์ซ้ำ
+                            </button>
+                          </div>
                         </div>
                       </div>
 
@@ -577,6 +856,226 @@ export default function TodayReportPage() {
           </>
         )}
       </div>
+
+      {editBill && (
+        <div className="no-print fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-3">
+          <div className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white p-5 shadow-2xl">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-2xl font-bold text-orange-900">
+                  แก้ไขบิล
+                </h2>
+                <p className="text-sm text-gray-500">
+                  {editBill.receiptNo} · {getTableName(editBill.tableNo)}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={closeEditBill}
+                disabled={savingEdit}
+                className="rounded-xl bg-gray-100 px-3 py-2 font-bold hover:bg-gray-200 disabled:opacity-50"
+              >
+                ✕ ปิด
+              </button>
+            </div>
+
+            <div className="mt-5 space-y-3">
+              {editItems.length === 0 ? (
+                <div className="rounded-xl bg-red-50 p-4 font-bold text-red-700">
+                  ไม่มีรายการเหลือในบิลนี้
+                </div>
+              ) : (
+                editItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className="rounded-2xl border border-gray-200 p-4"
+                  >
+                    <div className="grid gap-3 md:grid-cols-[1fr_140px]">
+                      <label className="block">
+                        <span className="mb-1 block text-sm font-bold">
+                          ชื่อรายการ
+                        </span>
+                        <input
+                          value={item.name}
+                          onChange={(e) =>
+                            changeEditItemName(item.id, e.target.value)
+                          }
+                          className="w-full rounded-xl border px-3 py-2"
+                        />
+                      </label>
+
+                      <label className="block">
+                        <span className="mb-1 block text-sm font-bold">
+                          ราคาต่อหน่วย
+                        </span>
+                        <input
+                          type="number"
+                          min="0"
+                          step="1"
+                          value={Number(item.item_total ?? item.price ?? 0)}
+                          onChange={(e) =>
+                            changeEditItemPrice(item.id, e.target.value)
+                          }
+                          className="w-full rounded-xl border px-3 py-2"
+                        />
+                      </label>
+                    </div>
+
+                    {getOrderOptions(item).length > 0 && (
+                      <div className="mt-2 rounded-xl bg-gray-50 p-3 text-sm text-gray-600">
+                        ตัวเลือกเดิม:{" "}
+                        {getOrderOptions(item)
+                          .map((option) => option.name)
+                          .filter(Boolean)
+                          .join(", ")}
+                      </div>
+                    )}
+
+                    <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            changeEditItemQty(item.id, Number(item.qty) - 1)
+                          }
+                          disabled={Number(item.qty) <= 1 || savingEdit}
+                          className="h-10 w-10 rounded-xl bg-gray-200 text-xl font-bold disabled:opacity-40"
+                        >
+                          −
+                        </button>
+
+                        <div className="min-w-12 text-center text-xl font-bold">
+                          {item.qty}
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            changeEditItemQty(item.id, Number(item.qty) + 1)
+                          }
+                          disabled={savingEdit}
+                          className="h-10 w-10 rounded-xl bg-gray-200 text-xl font-bold disabled:opacity-40"
+                        >
+                          +
+                        </button>
+
+                        <span className="ml-2 font-bold text-orange-700">
+                          {(
+                            Number(item.item_total ?? item.price ?? 0) *
+                            Number(item.qty || 1)
+                          ).toFixed(0)}
+                          ฿
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => deletePaidItem(item)}
+                        disabled={savingEdit}
+                        className="rounded-xl bg-red-600 px-4 py-2 font-bold text-white hover:bg-red-700 disabled:opacity-50"
+                      >
+                        🗑 ลบรายการ
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="mt-5 rounded-2xl bg-orange-50 p-4">
+              <h3 className="text-lg font-bold text-orange-900">
+                + เพิ่มรายการในบิลเดิม
+              </h3>
+
+              <div className="mt-3 grid gap-3 md:grid-cols-[1fr_140px_100px_auto]">
+                <input
+                  placeholder="ชื่อรายการ เช่น ไข่ดาว"
+                  value={newItemName}
+                  onChange={(e) => setNewItemName(e.target.value)}
+                  className="rounded-xl border bg-white px-3 py-2"
+                />
+
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  placeholder="ราคา"
+                  value={newItemPrice}
+                  onChange={(e) => setNewItemPrice(e.target.value)}
+                  className="rounded-xl border bg-white px-3 py-2"
+                />
+
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  placeholder="จำนวน"
+                  value={newItemQty}
+                  onChange={(e) => setNewItemQty(e.target.value)}
+                  className="rounded-xl border bg-white px-3 py-2"
+                />
+
+                <button
+                  type="button"
+                  onClick={addPaidItem}
+                  disabled={savingEdit}
+                  className="rounded-xl bg-green-600 px-4 py-2 font-bold text-white hover:bg-green-700 disabled:opacity-50"
+                >
+                  เพิ่ม
+                </button>
+              </div>
+
+              <p className="mt-2 text-xs text-gray-500">
+                รายการที่เพิ่มจากหน้านี้เป็นรายการแบบกำหนดเอง
+                เหมาะกับกรณีลืมคิดไข่ดาว น้ำ หรือรายการเล็ก ๆ
+              </p>
+            </div>
+
+            <div className="mt-5 rounded-2xl bg-gray-900 p-4 text-white">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-lg font-bold">ยอดใหม่</span>
+                <span className="text-3xl font-bold">
+                  {editBillTotal.toFixed(0)}฿
+                </span>
+              </div>
+
+              {editBill.paymentMethod === "cash" && (
+                <div className="mt-2 text-sm text-gray-300">
+                  เงินที่รับไว้เดิม {editBill.cashReceived.toFixed(0)}฿
+                  {" · "}
+                  เงินทอนใหม่{" "}
+                  {Math.max(
+                    Number(editBill.cashReceived || 0) - editBillTotal,
+                    0
+                  ).toFixed(0)}
+                  ฿
+                </div>
+              )}
+            </div>
+
+            <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={closeEditBill}
+                disabled={savingEdit}
+                className="rounded-xl bg-gray-200 px-5 py-3 font-bold hover:bg-gray-300 disabled:opacity-50"
+              >
+                ยกเลิก
+              </button>
+
+              <button
+                type="button"
+                onClick={saveEditedBill}
+                disabled={savingEdit || editItems.length === 0}
+                className="rounded-xl bg-orange-600 px-5 py-3 font-bold text-white hover:bg-orange-700 disabled:opacity-50"
+              >
+                {savingEdit ? "กำลังบันทึก..." : "💾 บันทึกการแก้ไข"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {reprintBill && (
         <div className="print-only font-mono text-[12px] leading-tight">
