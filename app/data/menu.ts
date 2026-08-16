@@ -913,6 +913,15 @@ export const menuItems: MenuItem[] = [
     station: "rice",
     optionGroups: simpleTakeawayOptions,
   },
+
+  {
+    id: 131,
+    name: "กบทอด (กับข้าว)",
+    englishName: "Deep-fried Frog",
+    price: 70,
+    station: "rice",
+    optionGroups: simpleTakeawayOptions,
+  },
   
 
   {
