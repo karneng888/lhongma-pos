@@ -42,7 +42,9 @@ const mainProteinOptions: MenuOptionGroup = {
     { id: "crispy-chicken", name: "ไก่กรอบ", englishName: "Crispy Chicken",  price: 0 },
     { id: "stewed-pork", name: "หมูตุ๋น", englishName: "Braised pork", price: 0 },
     { id: "stewed-beef", name: "เนื้อตุ๋น", englishName: "Braised beef", price: 5 },
-    { id: " sour-pork", name: "แหนม", englishName: "Sour pork", price: 0 },
+    { id: "sour-pork", name: "แหนม", englishName: "Sour pork", price: 0 },
+    { id: "Boar", name: "หมูป่า", englishName: "Boar", price: 10 },
+    { id: "Frog", name: "กบ", englishName: "Frog", price: 5 },
   ],
 };
 
@@ -62,7 +64,7 @@ const mainProteinOptionsSuki: MenuOptionGroup = {
     { id: "sliced-beef", name: "เนื้อชิ้น", englishName: "Sliced Beef",  price: 5 },
     { id: "stewed-pork", name: "หมูตุ๋น", englishName: "Braised pork", price: 5 },
     { id: "stewed-beef", name: "เนื้อตุ๋น", englishName: "Braised beef", price: 5 },
-    { id: " sour-pork", name: "แหนม", englishName: "Sour pork", price: 5 },
+    { id: "sour-pork", name: "แหนม", englishName: "Sour pork", price: 5 },
   ],
 };
 
@@ -82,7 +84,7 @@ const mainProteinOptionsSeeEw: MenuOptionGroup = {
     { id: "sliced-beef", name: "เนื้อชิ้น", englishName: "Sliced Beef",  price: 10 },
     { id: "stewed-pork", name: "หมูตุ๋น", englishName: "Braised pork", price: 10 },
     { id: "stewed-beef", name: "เนื้อตุ๋น", englishName: "Braised beef", price: 10 },
-    { id: " sour-pork", name: "แหนม", englishName: "Sour pork", price: 0 },
+    { id: "sour-pork", name: "แหนม", englishName: "Sour pork", price: 0 },
   ],
 };
 
@@ -158,7 +160,9 @@ const addProteinOptions: MenuOptionGroup = {
     { id: "add-crispy-chicken", name: "เพิ่มไก่กรอบ", englishName: "Add crispy-chicken", price: 10, stockId: "crispy-chicken" },
     { id: "add-stewed-pork", name: "เพิ่มหมูตุ๋น", englishName: "Add stewed-pork", price: 10, stockId: "stewed-pork" },
     { id: "add-stewed-beef", name: "เพิ่มเนื้อตุ๋น", englishName: "Add stewed-beef", price: 15, stockId: "stewed-beef" },
-    { id: "add- sour-pork", name: "แหนม", englishName: "Add Sour pork", price: 10, stockId: "sour-pork"},
+    { id: "add-sour-pork", name: "แหนม", englishName: "Add Sour pork", price: 10, stockId: "sour-pork"},
+    { id: "add-Frog", name: "กบ", englishName: "Add Frog", price: 10, stockId: "Frog"},
+    { id: "add-Boar", name: "หมูป่า", englishName: "Add Boar", price: 15, stockId: "Boar"},
   ],
 };
 
@@ -734,8 +738,17 @@ export const menuItems: MenuItem[] = [
     station: "rice",
     optionGroups: Crispymenu,
   },
+
   {
     id: 91,
+    name: "ข้าวพริกไทยดำ",
+    englishName: "Black pepper with Rice",
+    price: 50,
+    station: "rice",
+    optionGroups: riceSpicyOptions,
+  },  
+  {
+    id: 94,
     name: "ข้าวหมูกรอบทอด",
     englishName: "Crispy pork with Rice",
     price: 60,
@@ -743,7 +756,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: Crispymenu,
   },
   {
-    id: 92,
+    id: 95,
     name: "ข้าวหมูสามชั้นผัดกะปิชะอม",
     englishName: "Stir-fried Pork Belly with Shrimp Paste and Acacia Leaves on Rice",
     price: 60,
@@ -751,7 +764,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: NomainPritein,
   },
   {
-    id: 93,
+    id: 96,
     name: "ข้าวกุ้งผัดกะปิชะอม",
     englishName: "Stir-fried Shrimp with Shrimp Paste and Acacia Leaves on Rice",
     price: 70,
@@ -759,15 +772,24 @@ export const menuItems: MenuItem[] = [
     optionGroups: NomainPritein,
   },
   {
-    id: 94,
+    id: 97,
     name: "ข้าวกุ้งผัดกะปิสะตอ",
     englishName: "Stir-fried Shrimp with Shrimp Paste and Sa-taw on Rice",
     price: 70,
     station: "rice",
     optionGroups: NomainPritein,
   },
+
   {
-    id: 95,
+    id: 98,
+    name: "ข้าวหมูสามชั้นผัดกะปิสะตอ",
+    englishName: "Stir-fried Pork Belly with Shrimp Paste and Sa-taw on Rice",
+    price: 70,
+    station: "rice",
+    optionGroups: NomainPritein,
+  },
+  {
+    id: 99,
     name: "ข้าวผัดต้มยำ",
     englishName: "Tom Yum Fried Rice",
     price: 50,
@@ -775,7 +797,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: riceSpicyOptions,
   },
   {
-    id: 96,
+    id: 100,
     name: "ข้าวผัด",
     englishName: "Fried Rice",
     price: 60,
@@ -785,7 +807,7 @@ export const menuItems: MenuItem[] = [
 
 
   {
-    id: 100,
+    id: 114,
     name: "สุกี้น้ำ",
     englishName: "Sukiyaki with Soup",
     price: 60,
@@ -793,7 +815,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: sukiOptions,
   },
   {
-    id: 101,
+    id: 115,
     name: "สุกี้แห้ง",
     englishName: "Stir-fried Sukiyaki (Dry)",
     price: 60,
@@ -801,7 +823,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: sukiOptions,
   },
   {
-    id: 102,
+    id: 116,
     name: "เส้นใหญ่ผัดซีอิ๊ว",
     englishName: "Stir-fried Large Rice Noodles with Soy Sauce (Pad See Ew)",
     price: 50,
@@ -809,7 +831,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: riceSimpleOptions,
   },
   {
-    id: 103,
+    id: 117,
     name: "เส้นหมี่ผัดซีอิ๊ว",
     englishName: "Stir-fried Rice Vermicelli with Soy Sauce (Pad See Ew)",
     price: 50,
@@ -817,7 +839,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: riceSimpleOptions,
   },
   {
-    id: 104,
+    id: 118,
     name: "ข้าวไข่เจียว 2 ฟอง",
     englishName: "2 Omelets with rice",
     price: 40,
@@ -825,7 +847,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: simpleTakeawayOptions,
   },
   {
-    id: 105,
+    id: 119,
     name: "ข้าวไข่เจียวหมูสับ",
     englishName: "minced-pork Omelets with rice",
     price: 50,
@@ -833,7 +855,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: simpleTakeawayOptions,
   },
   {
-    id: 106,
+    id: 120,
     name: "ข้าวไข่เจียวเนื้อสับ",
     englishName: "minced-beef Omelets with rice",
     price: 60,
@@ -841,7 +863,7 @@ export const menuItems: MenuItem[] = [
     optionGroups: simpleTakeawayOptions,
   },
   {
-    id: 107,
+    id: 121,
     name: "ข้าวไข่เจียวทะเล",
     englishName: "Seafood Omelets with rice",
     price: 60,
@@ -850,7 +872,7 @@ export const menuItems: MenuItem[] = [
   },
 
   {
-    id: 108,
+    id: 122,
     name: "ไข่เจียวหมูสับ(กับข้าว)",
     englishName: "mince pork Omelets (Dish)",
     price: 50,
@@ -859,7 +881,7 @@ export const menuItems: MenuItem[] = [
   },
 
   {
-    id: 109,
+    id: 123,
     name: "ไข่เจียวเนื้อสับ(กับข้าว)",
     englishName: "mince beef Omelets (Dish)",
     price: 60,
@@ -868,7 +890,7 @@ export const menuItems: MenuItem[] = [
   },
 
   {
-    id: 110,
+    id: 124,
     name: "ไข่เจียวทะเล(กับข้าว)",
     englishName: "Seafood Omelets (Dish)",
     price: 60,
