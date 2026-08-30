@@ -279,7 +279,7 @@ const Crispymenu: MenuOptionGroup[] = [
   takeawayOptions,
 ];
 
-const NomainPritein: MenuOptionGroup[] = [
+const NomainProtein: MenuOptionGroup[] = [
   foodTypeOptions,
   extraOptions,
   eggOptions,
@@ -428,7 +428,7 @@ export const menuItems: MenuItem[] = [
     id: 5,
     name: "ก๋วยเตี๋ยวหมูตุ๋น",
     englishName: "Braised Pork Noodles",
-    price: 50,
+    price: 60,
     station: "noodle",
     optionGroups: noodleOptions,
   },
@@ -436,7 +436,7 @@ export const menuItems: MenuItem[] = [
     id: 6,
     name: "ก๋วยเตี๋ยวเนื้อตุ๋น",
     englishName: "Braised Beef Noodles",
-    price: 50,
+    price: 60,
     station: "noodle",
     optionGroups: noodleOptions,
   },
@@ -503,7 +503,7 @@ export const menuItems: MenuItem[] = [
     id: 14,
     name: "เกาเหลา",
     englishName: "No-Noodle Soup (Gaolaou)",
-    price: 50,
+    price: 60,
     station: "noodle",
     optionGroups: NoodlesSoup1,
   },
@@ -761,7 +761,7 @@ export const menuItems: MenuItem[] = [
     englishName: "Stir-fried Pork Belly with Shrimp Paste and Acacia Leaves on Rice",
     price: 60,
     station: "rice",
-    optionGroups: NomainPritein,
+    optionGroups: NomainProtein,
   },
   {
     id: 96,
@@ -769,7 +769,7 @@ export const menuItems: MenuItem[] = [
     englishName: "Stir-fried Shrimp with Shrimp Paste and Acacia Leaves on Rice",
     price: 70,
     station: "rice",
-    optionGroups: NomainPritein,
+    optionGroups: NomainProtein,
   },
   {
     id: 97,
@@ -777,7 +777,7 @@ export const menuItems: MenuItem[] = [
     englishName: "Stir-fried Shrimp with Shrimp Paste and Sa-taw on Rice",
     price: 70,
     station: "rice",
-    optionGroups: NomainPritein,
+    optionGroups: NomainProtein,
   },
 
   {
@@ -786,7 +786,7 @@ export const menuItems: MenuItem[] = [
     englishName: "Stir-fried Pork Belly with Shrimp Paste and Sa-taw on Rice",
     price: 70,
     station: "rice",
-    optionGroups: NomainPritein,
+    optionGroups: NomainProtein,
   },
   {
     id: 99,
@@ -804,7 +804,14 @@ export const menuItems: MenuItem[] = [
     station: "rice",
     optionGroups: FriedriceNoSpicyOptions,
   },
-
+  {
+  id: 101,
+    name: "ข้าวราดผัดเผ็ดกบ",
+    englishName: "Spicy stir fried frog on Rice",
+    price: 60,
+    station: "rice",
+    optionGroups: NomainProtein,
+  },
 
   {
     id: 114,
