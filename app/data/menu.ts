@@ -23,6 +23,60 @@ export type MenuItem = {
   optionGroups?: MenuOptionGroup[];
 };
 
+export type OptionGroupKey =
+  | "noodle"
+  | "noodle_soup"
+  | "rice_spicy"
+  | "rice_no_spicy"
+  | "fried_rice"
+  | "rice_simple"
+  | "crispy"
+  | "no_main_protein"
+  | "suki"
+  | "simple_takeaway"
+  | "none";
+
+export function getOptionGroupsByKey(
+  key: string | null | undefined
+): MenuOptionGroup[] | undefined {
+  switch (key) {
+    case "noodle":
+      return noodleOptions;
+
+    case "noodle_soup":
+      return NoodlesSoup1;
+
+    case "rice_spicy":
+      return riceSpicyOptions;
+
+    case "rice_no_spicy":
+      return riceNoSpicyOptions;
+
+    case "fried_rice":
+      return FriedriceNoSpicyOptions;
+
+    case "rice_simple":
+      return riceSimpleOptions;
+
+    case "crispy":
+      return Crispymenu;
+
+    case "no_main_protein":
+      return NomainProtein;
+
+    case "suki":
+      return sukiOptions;
+
+    case "simple_takeaway":
+      return simpleTakeawayOptions;
+
+    case "none":
+    default:
+      return undefined;
+  }
+}
+
+
 const mainProteinOptions: MenuOptionGroup = {
   id: "main-protein",
   name: "เลือกเนื้อสัตว์หลัก",

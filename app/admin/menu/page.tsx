@@ -3,11 +3,18 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/app/lib/supabase";
-import { menuItems } from "@/app/data/menu";
 
 type MenuStatus = {
   menu_id: number;
   is_available: boolean;
+};
+
+type MenuItem = {
+  id: number;
+  name: string;
+  price: number;
+  station: "noodle" | "rice" | "drink";
+  is_active: boolean;
 };
 
 type Category = "all" | "noodle" | "rice" | "drink";
@@ -20,30 +27,69 @@ function getCategoryName(station: string) {
 }
 
 export default function AdminMenuPage() {
+  const [menuList, setMenuList] = useState<MenuItem[]>([]);
   const [statuses, setStatuses] = useState<MenuStatus[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeCategory, setActiveCategory] = useState<Category>("all");
+  const [activeCategory, setActiveCategory] =
+    useState<Category>("all");
   const [isAllowed, setIsAllowed] = useState(false);
+
+  async function loadMenus() {
+    const { data, error } = await supabase
+      .from("menu_items")
+      .select("id, name, price, station, is_active")
+      .eq("is_active", true)
+      .order("id", { ascending: true });
+
+    if (error) {
+      console.error(error);
+      alert("โหลดรายการเมนูไม่สำเร็จ: " + error.message);
+      return;
+    }
+
+    setMenuList((data || []) as MenuItem[]);
+  }
 
   async function loadMenuStatus() {
     const { data, error } = await supabase
       .from("menu_status")
-      .select("*")
+      .select("menu_id, is_available")
       .order("menu_id", { ascending: true });
 
     if (error) {
       console.error(error);
       alert("โหลดสถานะเมนูไม่สำเร็จ: " + error.message);
-      setLoading(false);
       return;
     }
 
     setStatuses(data || []);
+  }
+
+  async function loadEverything() {
+    setLoading(true);
+
+    await Promise.all([
+      loadMenus(),
+      loadMenuStatus(),
+    ]);
+
     setLoading(false);
   }
 
   useEffect(() => {
-    loadMenuStatus();
+    loadEverything();
+  }, []);
+
+  useEffect(() => {
+    const isLogin =
+      sessionStorage.getItem("lhongma-admin-login");
+
+    if (isLogin !== "yes") {
+      window.location.href = "/login";
+      return;
+    }
+
+    setIsAllowed(true);
   }, []);
 
   const statusMap = useMemo(() => {
@@ -56,24 +102,20 @@ export default function AdminMenuPage() {
     return map;
   }, [statuses]);
 
-  useEffect(() => {
-  const isLogin = sessionStorage.getItem("lhongma-admin-login");
-
-  if (isLogin !== "yes") {
-    window.location.href = "/login";
-    return;
-  }
-
-  setIsAllowed(true);
-}, []);
-
   const filteredMenuItems = useMemo(() => {
-    if (activeCategory === "all") return menuItems;
-    return menuItems.filter((item) => item.station === activeCategory);
-  }, [activeCategory]);
+    if (activeCategory === "all") {
+      return menuList;
+    }
+
+    return menuList.filter(
+      (item) => item.station === activeCategory
+    );
+  }, [activeCategory, menuList]);
 
   async function toggleMenu(menuId: number) {
-    const currentStatus = statusMap.get(menuId) ?? true;
+    const currentStatus =
+      statusMap.get(menuId) ?? true;
+
     const newStatus = !currentStatus;
 
     const { error } = await supabase
@@ -86,66 +128,111 @@ export default function AdminMenuPage() {
 
     if (error) {
       console.error(error);
-      alert("อัปเดตสถานะเมนูไม่สำเร็จ: " + error.message);
+      alert(
+        "อัปเดตสถานะเมนูไม่สำเร็จ: " +
+          error.message
+      );
       return;
     }
 
     setStatuses((prev) => {
-      const exists = prev.some((item) => item.menu_id === menuId);
+      const exists = prev.some(
+        (item) => item.menu_id === menuId
+      );
 
       if (exists) {
         return prev.map((item) =>
           item.menu_id === menuId
-            ? { ...item, is_available: newStatus }
+            ? {
+                ...item,
+                is_available: newStatus,
+              }
             : item
         );
       }
 
-      return [...prev, { menu_id: menuId, is_available: newStatus }];
+      return [
+        ...prev,
+        {
+          menu_id: menuId,
+          is_available: newStatus,
+        },
+      ];
     });
   }
+
   if (!isAllowed) {
-  return (
-    <main className="flex min-h-screen items-center justify-center bg-orange-50 text-gray-900">
-      <div className="rounded-2xl bg-white p-6 font-bold shadow">
-        กำลังตรวจสอบสิทธิ์...
-      </div>
-    </main>
-  );
-}
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-orange-50 text-gray-900">
+        <div className="rounded-2xl bg-white p-6 font-bold shadow">
+          กำลังตรวจสอบสิทธิ์...
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-orange-50 p-4 text-gray-900">
       <div className="mx-auto max-w-5xl">
+
         <div className="rounded-2xl bg-white p-5 shadow">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+
             <div>
               <h1 className="text-3xl font-bold text-orange-900">
-                จัดการเมนู
+                สถานะเมนูวันนี้
               </h1>
+
               <p className="text-gray-500">
-                เปิด/ปิดเมนูที่หมดชั่วคราว
+                เปิด / ปิดเมนูที่หมดชั่วคราว
               </p>
             </div>
 
-            <Link
-              href="/pos"
-              className="rounded-xl bg-gray-900 px-4 py-3 text-center font-bold text-white hover:bg-gray-800"
-            >
-              กลับหน้าแผนผังโต๊ะ
-            </Link>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Link
+                href="/admin/menu-edit"
+                className="rounded-xl bg-orange-600 px-4 py-3 text-center font-bold text-white hover:bg-orange-700"
+              >
+                เพิ่ม / แก้ไขเมนู
+              </Link>
+
+              <Link
+                href="/pos"
+                className="rounded-xl bg-gray-900 px-4 py-3 text-center font-bold text-white hover:bg-gray-800"
+              >
+                กลับหน้าแผนผังโต๊ะ
+              </Link>
+            </div>
+
           </div>
         </div>
 
         <div className="mt-5 flex gap-2 overflow-x-auto pb-2">
           {[
-            { id: "all", label: "ทั้งหมด" },
-            { id: "noodle", label: "ก๋วยเตี๋ยว" },
-            { id: "rice", label: "ตามสั่ง" },
-            { id: "drink", label: "เครื่องดื่ม" },
+            {
+              id: "all",
+              label: "ทั้งหมด",
+            },
+            {
+              id: "noodle",
+              label: "ก๋วยเตี๋ยว",
+            },
+            {
+              id: "rice",
+              label: "ตามสั่ง",
+            },
+            {
+              id: "drink",
+              label: "เครื่องดื่ม",
+            },
           ].map((category) => (
             <button
               key={category.id}
-              onClick={() => setActiveCategory(category.id as Category)}
+              onClick={() =>
+                setActiveCategory(
+                  category.id as Category
+                )
+              }
               className={`whitespace-nowrap rounded-full px-4 py-2 font-bold ${
                 activeCategory === category.id
                   ? "bg-orange-600 text-white"
@@ -164,7 +251,8 @@ export default function AdminMenuPage() {
         ) : (
           <div className="mt-5 grid gap-3">
             {filteredMenuItems.map((item) => {
-              const isAvailable = statusMap.get(item.id) ?? true;
+              const isAvailable =
+                statusMap.get(item.id) ?? true;
 
               return (
                 <div
@@ -176,29 +264,42 @@ export default function AdminMenuPage() {
                   }`}
                 >
                   <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+
                     <div>
-                      <p className="text-xl font-bold">{item.name}</p>
+                      <p className="text-xl font-bold">
+                        {item.name}
+                      </p>
+
                       <p className="text-gray-500">
-                        {getCategoryName(item.station)} · {item.price} บาท
+                        {getCategoryName(
+                          item.station
+                        )}{" "}
+                        · {item.price} บาท
                       </p>
                     </div>
 
                     <button
-                      onClick={() => toggleMenu(item.id)}
+                      onClick={() =>
+                        toggleMenu(item.id)
+                      }
                       className={`rounded-xl px-5 py-3 font-bold ${
                         isAvailable
                           ? "bg-green-600 text-white hover:bg-green-700"
                           : "bg-red-600 text-white hover:bg-red-700"
                       }`}
                     >
-                      {isAvailable ? "เปิดขาย" : "หมด / ปิดขาย"}
+                      {isAvailable
+                        ? "เปิดขาย"
+                        : "หมด / ปิดขาย"}
                     </button>
+
                   </div>
                 </div>
               );
             })}
           </div>
         )}
+
       </div>
     </main>
   );

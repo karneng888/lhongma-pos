@@ -2,7 +2,12 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { menuItems, MenuItem, MenuOption } from "@/app/data/menu";
+import {
+  menuItems,
+  MenuItem,
+  MenuOption,
+  getOptionGroupsByKey,
+} from "@/app/data/menu";
 import { supabase } from "@/app/lib/supabase";
 
 type SelectedOption = {
@@ -108,7 +113,51 @@ export default function TableOrderPage() {
     new Map()
   );
   const [isMenuStatusLoading, setIsMenuStatusLoading] = useState(true);
+  const [liveMenuItems, setLiveMenuItems] = useState<MenuItem[]>([]);
+const [isMenuItemsLoading, setIsMenuItemsLoading] = useState(true);
 
+async function loadMenuItems() {
+  setIsMenuItemsLoading(true);
+
+  const { data, error } = await supabase
+    .from("menu_items")
+    .select(
+      "id, name, english_name, price, station, is_active, option_group_key"
+    )
+    .eq("is_active", true)
+    .order("id", { ascending: true });
+
+  if (error) {
+    console.error("โหลด menu_items ไม่สำเร็จ:", error);
+
+    // ถ้า Supabase มีปัญหา ให้ใช้เมนูเดิมก่อน
+    setLiveMenuItems(menuItems);
+    setIsMenuItemsLoading(false);
+    return;
+  }
+
+  const convertedMenus: MenuItem[] = (data || []).map((dbItem) => {
+    // fallback หา option เดิมจาก menu.ts ด้วย id
+    const oldMenu = menuItems.find(
+      (item) => item.id === Number(dbItem.id)
+    );
+
+    return {
+      id: Number(dbItem.id),
+      name: dbItem.name,
+      englishName: dbItem.english_name || undefined,
+      price: Number(dbItem.price),
+      station: dbItem.station as "noodle" | "rice" | "drink",
+
+      optionGroups:
+        getOptionGroupsByKey(dbItem.option_group_key) ||
+        oldMenu?.optionGroups,
+    };
+  });
+
+  setLiveMenuItems(convertedMenus);
+  setIsMenuItemsLoading(false);
+}
   const optionTotal = selectedOptions.reduce(
     (sum, option) => sum + option.price,
     0
@@ -123,9 +172,9 @@ export default function TableOrderPage() {
 
   // ซ่อนเมนูที่ถูกปิดใน Supabase
   // ถ้าเมนูยังไม่มีแถวใน menu_status จะถือว่ายังเปิดอยู่
-  const availableMenuItems = menuItems.filter(
-    (item) => menuStatusMap.get(item.id) !== false
-  );
+  const availableMenuItems = liveMenuItems.filter(
+  (item) => menuStatusMap.get(item.id) !== false
+);
 
   const filteredMenuItems =
     activeCategory === "all"
@@ -491,10 +540,11 @@ export default function TableOrderPage() {
   };
 
   useEffect(() => {
-    loadMenuStatus();
-    loadOptionStatus();
-    loadTableSession();
-  }, []);
+  loadMenuItems();
+  loadMenuStatus();
+  loadOptionStatus();
+  loadTableSession();
+}, []);
 
   useEffect(() => {
     if (!currentSessionId || isSessionBlocked) return;
@@ -506,7 +556,11 @@ export default function TableOrderPage() {
     return () => clearInterval(timer);
   }, [currentSessionId, isSessionBlocked]);
 
-  if (isSessionLoading || isMenuStatusLoading) {
+  if (
+  isSessionLoading ||
+  isMenuStatusLoading ||
+  isMenuItemsLoading
+) {
     return (
       <main className="min-h-screen bg-orange-50 p-4">
         <div className="mx-auto max-w-3xl rounded-3xl bg-white p-6 text-center shadow">

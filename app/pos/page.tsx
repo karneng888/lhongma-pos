@@ -190,6 +190,12 @@ export default function PosPage() {
               >
                 จัดการวัตถุดิบ
               </Link>
+              <Link
+              href="/admin/menu-edit"
+              className="rounded-xl bg-blue-600 px-4 py-3 text-center font-bold text-white hover:bg-blue-700"
+              >
+                แก้ไขเมนู
+              </Link>
             </div>
           </div>
         </div>
@@ -330,6 +336,13 @@ export default function PosPage() {
           >
             จัดการวัตถุดิบ
           </Link>
+
+          <Link
+              href="/admin/menu-edit"
+              className="rounded-xl bg-blue-600 p-4 text-center font-bold text-gray-950 shadow"
+              >
+                แก้ไขเมนู
+              </Link>
         </div>
       </div>
     </main>

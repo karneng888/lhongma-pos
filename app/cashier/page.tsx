@@ -2,7 +2,12 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/app/lib/supabase";
-import { menuItems, MenuItem, MenuOption } from "@/app/data/menu";
+import {
+  menuItems,
+  MenuItem,
+  MenuOption,
+  getOptionGroupsByKey,
+} from "@/app/data/menu";
 
 type Station = "noodle" | "rice" | "drink";
 type AddMenuCategory = "noodle" | "rice" | "drink";
@@ -165,7 +170,10 @@ export default function CashierPage() {
 
   const [activeAddCategory, setActiveAddCategory] =
     useState<AddMenuCategory>("noodle");
+  const [liveMenuItems, setLiveMenuItems] = useState<MenuItem[]>([]);
+const [isMenuItemsLoading, setIsMenuItemsLoading] = useState(true);
 
+const [addMenuSearch, setAddMenuSearch] = useState("");
   const [optionStatusMap, setOptionStatusMap] = useState<
     Map<string, boolean>
   >(new Map());
@@ -216,6 +224,47 @@ export default function CashierPage() {
 
     setOptionStatusMap(map);
   };
+  const loadMenuItems = async () => {
+  setIsMenuItemsLoading(true);
+
+  const { data, error } = await supabase
+    .from("menu_items")
+    .select(
+      "id, name, english_name, price, station, is_active, option_group_key"
+    )
+    .eq("is_active", true)
+    .order("id", { ascending: true });
+
+  if (error) {
+    console.error("โหลด menu_items ไม่สำเร็จ:", error);
+
+    // ถ้า Supabase มีปัญหา ใช้เมนูเก่าเป็น fallback
+    setLiveMenuItems(menuItems);
+    setIsMenuItemsLoading(false);
+    return;
+  }
+
+  const convertedMenus: MenuItem[] = (data || []).map((dbItem) => {
+    const oldMenu = menuItems.find(
+      (item) => item.id === Number(dbItem.id)
+    );
+
+    return {
+      id: Number(dbItem.id),
+      name: dbItem.name,
+      englishName: dbItem.english_name || undefined,
+      price: Number(dbItem.price),
+      station: dbItem.station as "noodle" | "rice" | "drink",
+
+      optionGroups:
+        getOptionGroupsByKey(dbItem.option_group_key) ||
+        oldMenu?.optionGroups,
+    };
+  });
+
+  setLiveMenuItems(convertedMenus);
+  setIsMenuItemsLoading(false);
+};
   const loadCustomMenuItems = async () => {
   const { data, error } = await supabase
     .from("custom_menu_items")
@@ -241,16 +290,17 @@ export default function CashierPage() {
 }, []);
 
   useEffect(() => {
+  loadOrders();
+  loadOptionStatus();
+  loadCustomMenuItems();
+  loadMenuItems();
+
+  const timer = setInterval(() => {
     loadOrders();
-    loadOptionStatus();
-    loadCustomMenuItems();
+  }, 1000);
 
-    const timer = setInterval(() => {
-      loadOrders();
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
+  return () => clearInterval(timer);
+}, []);
 
   const tables = useMemo(() => {
     const tableMap = new Map<string, OrderItem[]>();
@@ -300,8 +350,26 @@ export default function CashierPage() {
     : 0;
 
   const filteredAddMenuItems = useMemo(() => {
-    return menuItems.filter((item) => item.station === activeAddCategory);
-  }, [activeAddCategory]);
+  const keyword = addMenuSearch.trim().toLowerCase();
+
+  return liveMenuItems.filter((item) => {
+    const matchCategory =
+      item.station === activeAddCategory;
+
+    const matchSearch =
+      keyword === "" ||
+      item.name.toLowerCase().includes(keyword) ||
+      (item.englishName || "")
+        .toLowerCase()
+        .includes(keyword);
+
+    return matchCategory && matchSearch;
+  });
+}, [
+  liveMenuItems,
+  activeAddCategory,
+  addMenuSearch,
+]);
 
   const openAddItem = () => {
     if (!selectedTable) {
@@ -316,6 +384,7 @@ export default function CashierPage() {
     setAddItemNote("");
     setAddItemQty(1);
     setActiveAddCategory("noodle");
+    setAddMenuSearch("");
   };
 
   const closeAddItem = () => {
@@ -1252,11 +1321,46 @@ if (hasMainProtein && !selectedMainProtein) {
                     </button>
                   ))}
                 </div>
+                    <div className="mt-4">
+  <label className="font-bold">
+    ค้นหาเมนู
+  </label>
 
+  <div className="mt-2 flex gap-2">
+    <input
+      value={addMenuSearch}
+      onChange={(e) =>
+        setAddMenuSearch(e.target.value)
+      }
+      placeholder="พิมพ์ชื่อเมนู เช่น กะเพรา / หมูกรอบ / Coke"
+      className="w-full rounded-xl border bg-white p-3"
+    />
+
+    {addMenuSearch && (
+      <button
+        type="button"
+        onClick={() => setAddMenuSearch("")}
+        className="rounded-xl bg-gray-100 px-4 font-bold text-gray-600"
+      >
+        ✕
+      </button>
+    )}
+  </div>
+</div>
                 <h3 className="mt-4 font-bold">เลือกเมนู</h3>
 
-                <div className="mt-2 grid grid-cols-2 gap-2 md:grid-cols-3">
-                  {filteredAddMenuItems.map((item) => (
+                <div className="mt-2">
+  {isMenuItemsLoading ? (
+    <div className="rounded-xl bg-gray-50 p-4 text-center text-gray-500">
+      กำลังโหลดเมนู...
+    </div>
+  ) : filteredAddMenuItems.length === 0 ? (
+    <div className="rounded-xl bg-gray-50 p-4 text-center text-gray-500">
+      ไม่พบเมนูที่ค้นหา
+    </div>
+  ) : (
+    <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
+      {filteredAddMenuItems.map((item) => (
                     <button
                       key={item.id}
                       onClick={() => {
@@ -1293,6 +1397,8 @@ if (hasMainProtein && !selectedMainProtein) {
                     </button>
                   ))}
                 </div>
+                )}
+              </div>
               </div>
             ) : (
               <div className="mt-5 rounded-2xl border border-orange-300 bg-orange-50 p-4">
