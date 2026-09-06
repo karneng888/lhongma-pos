@@ -344,6 +344,7 @@ const NomainProtein: MenuOptionGroup[] = [
 const sukiOptions: MenuOptionGroup[] = [
   mainProteinOptionsSuki,
   addProteinOptions,
+  extraOptions,
   takeawayOptions,
 ];
 
