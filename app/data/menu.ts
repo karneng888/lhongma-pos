@@ -86,6 +86,7 @@ const mainProteinOptions: MenuOptionGroup = {
     { id: "minced-pork", name: "หมูสับ", englishName: "Minced Pork", price: 0 },
     { id: "sliced-pork", name: "หมูชิ้น", englishName: "Sliced Pork", price: 0 },
     { id: "chicken", name: "ไก่", englishName: "Chicken", price: 0 },
+    { id: "Braised-Chicken", name: "ไก่ตุ๋น", englishName: "Braised Chicken", price: 0 },
     { id: "chicken-organs", name: "เครื่องในไก่", englishName: "Chicken Giblets", price: 0 },
     { id: "pork-liver", name: "ตับหมู", englishName: "Pork Liver",  price: 0 },
     { id: "crispy-pork", name: "หมูกรอบ", englishName: "Crispy Pork",  price: 10 },
@@ -111,6 +112,7 @@ const mainProteinOptionsSuki: MenuOptionGroup = {
     { id: "minced-pork", name: "หมูสับ", englishName: "Minced Pork", price: 0 },
     { id: "sliced-pork", name: "หมูชิ้น", englishName: "Sliced Pork", price: 0 },
     { id: "chicken", name: "ไก่", englishName: "Chicken", price: 0 },
+    { id: "Braised-Chicken", name: "ไก่ตุ๋น", englishName: "Braised Chicken", price: 0 },
     { id: "chicken-organs", name: "เครื่องในไก่", englishName: "Chicken Giblets", price: 0 },
     { id: "crispy-pork", name: "หมูกรอบ", englishName: "Crispy Pork",  price: 5 },
     { id: "seafood", name: "ทะเล", englishName: "Seafood",  price: 5 },
@@ -131,6 +133,7 @@ const mainProteinOptionsSeeEw: MenuOptionGroup = {
     { id: "minced-pork", name: "หมูสับ", englishName: "Minced Pork", price: 0 },
     { id: "sliced-pork", name: "หมูชิ้น", englishName: "Sliced Pork", price: 0 },
     { id: "chicken", name: "ไก่", englishName: "Chicken", price: 0 },
+    { id: "Braised-Chicken", name: "ไก่ตุ๋น", englishName: "Braised Chicken", price: 0 },
     { id: "chicken-organs", name: "เครื่องในไก่", englishName: "Chicken Giblets", price: 0 },
     { id: "crispy-pork", name: "หมูกรอบ", englishName: "Crispy Pork",  price: 15 },
     { id: "seafood", name: "ทะเล", englishName: "Seafood",  price: 15 },
@@ -150,6 +153,7 @@ const mainProteinOptionsFriedRice: MenuOptionGroup = {
   options: [
     { id: "minced-pork", name: "หมูสับ", englishName: "Minced Pork", price: 0 },
     { id: "sliced-pork", name: "หมูชิ้น", englishName: "Sliced Pork", price: 0 },
+    { id: "Braised-Chicken", name: "ไก่ตุ๋น", englishName: "Braised Chicken", price: 0 },
     { id: "sweet-chinese", name: "กุนเชียง", englishName: "Sweet Chinese", price: 0 },
     { id: "chicken", name: "ไก่", englishName: "Chicken", price: 0 },
     { id: "chicken-organs", name: "เครื่องในไก่", englishName: "Chicken Giblets", price: 0 },
@@ -204,6 +208,7 @@ const addProteinOptions: MenuOptionGroup = {
     { id: "add-minced-pork", name: "เพิ่มหมูสับ", englishName: "Add Minced-Pork", price: 10, stockId: "minced-pork" },
     { id: "add-sliced-pork", name: "เพิ่มหมูชิ้น", price: 10, englishName: "Add Sliced pork", stockId: "sliced-pork" },
     { id: "add-chicken", name: "เพิ่มไก่", price: 10, englishName: "Add Chicken", stockId: "chicken" },
+    { id: "add-Braised-Chicken", name: "เพิ่มไก่ตุ๋น", price: 10, englishName: "Add Braised Chicken", stockId: "Braised-Chicken" },
     { id: "add-catfish", name: "เพิ่มหมูสับ", englishName: "Add catfish", price: 10, stockId: "catfish" },
     { id: "add-chicken-organs", name: "เพิ่มเครื่องในไก่", englishName: "Add chicken-organs", price: 10, stockId: "chicken-organs" },
     { id: "add-pork-liver", name: "เพิ่มตับหมู", englishName: "Add Pork liver", price: 10, stockId: "pork-liver" },
@@ -447,14 +452,14 @@ const noodleOptionsSoup: MenuOptionGroup[] = [
 ];
 
 export const menuItems: MenuItem[] = [
-  //{
-  //  id: 1,
-  //  name: "ก๋วยเตี๋ยวไก่มะระ",
-   // englishName: "Chicken Noodle Soup with Bitter Melon",
-  //  price: 50,
-  //  station: "noodle",
-  //  optionGroups: noodleOptions,
-  //},
+  {
+    id: 1,
+    name: "ก๋วยเตี๋ยวไก่ตุ๋น",
+    englishName: "Braised-Chicken Noodle Soup",
+    price: 50,
+    station: "noodle",
+    optionGroups: noodleOptions,
+  },
   {
     id: 2,
     name: "ก๋วยเตี๋ยวไก่น้ำใส",
