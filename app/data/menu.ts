@@ -181,7 +181,7 @@ const Noodlesprotain: MenuOptionGroup = {
     { id: "crispy-chicken", name: "ไก่กรอบ", englishName: "Crispy Chicken", price: 0 },
     { id: "stewed-pork", name: "หมูตุ๋น", englishName: "Braised pork", price: 0 },
     { id: "stewed-beef", name: "เนื้อตุ๋น", englishName: "Braised Beef", price: 10 },
-    { id: "ํYentafo", name: "เกาเหลาเยนตาโฟธรรมดาเลือกอันนี้", englishName: "for Yenta KAOLAO", price: 10 },
+    { id: "ํYentafo", name: "เกาเหลาเยนตาโฟธรรมดาเลือกอันนี้", englishName: "for Yenta KAOLAO", price: 0 },
   ],
 };
 
