@@ -181,6 +181,7 @@ const Noodlesprotain: MenuOptionGroup = {
     { id: "crispy-chicken", name: "ไก่กรอบ", englishName: "Crispy Chicken", price: 0 },
     { id: "stewed-pork", name: "หมูตุ๋น", englishName: "Braised pork", price: 0 },
     { id: "stewed-beef", name: "เนื้อตุ๋น", englishName: "Braised Beef", price: 10 },
+    { id: "ํYentafo", name: "เกาเหลาเยนตาโฟธรรมดาเลือกอันนี้", englishName: "for Yenta KAOLAO", price: 10 },
   ],
 };
 
@@ -194,10 +195,11 @@ const NoodlesSoup: MenuOptionGroup = {
     { id: "Tomyam", name: "ต้มยำ", englishName: "Tom-Yam", price: 0 },
     { id: "Yentafo-Tomyam", name: "เยนตาโฟต้มยำ", englishName: "Yentafo Tomyam", price: 0 },
     { id: "Yentafo", name: "เยนตาโฟ", englishName: "Yentafo", price: 0 },
-    { id: "Bitter", name: "มะระน้ำดำ", englishName: "Bitter Gourd", price: 0 },
+    
     
   ],
 };
+
 
 const addProteinOptions: MenuOptionGroup = {
   id: "add-protein",
