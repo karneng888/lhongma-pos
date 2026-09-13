@@ -6,6 +6,7 @@ const os = require("os");
 const path = require("path");
 const PDFDocument = require("pdfkit");
 const { print } = require("pdf-to-printer");
+const sharp = require("sharp");
 
 // ชื่อเครื่องปริ้น ต้องตรงกับชื่อใน Windows เป๊ะ ๆ
 const PRINTER_NAME = "XP-80C";
@@ -20,8 +21,8 @@ const PAPER_HEIGHT = 1400;
 // ปรับตำแหน่งซ้าย-ขวาตรงนี้
 // ถ้ายังเอียงขวา ให้ลด LEFT_MARGIN หรือเพิ่ม RIGHT_MARGIN
 // ถ้าเอียงซ้ายเกิน ให้เพิ่ม LEFT_MARGIN หรือลด RIGHT_MARGIN
-const LEFT_MARGIN = 4;
-const RIGHT_MARGIN = 50;
+const LEFT_MARGIN = 6;
+const RIGHT_MARGIN = 6;
 const CONTENT_WIDTH = PAPER_WIDTH - LEFT_MARGIN - RIGHT_MARGIN;
 
 // ฟอนต์ไทยใน Windows
@@ -39,6 +40,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 let isPrinting = false;
+let isLineManPrinting = false;
 
 function getTableName(tableNo) {
   if (tableNo.startsWith("takeaway-")) {
@@ -349,10 +351,212 @@ const { data, error } = await supabase
     isPrinting = false;
   }
 }
+// =====================================================
+// LINE MAN SCREENSHOT PRINT
+// =====================================================
 
+async function createLineManPdf(imageUrl) {
+  const pdfPath = path.join(
+    os.tmpdir(),
+    `lhongma-lineman-${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2)}.pdf`
+  );
+
+  // ดึงชื่อไฟล์จาก image_url
+const marker = "/lineman-orders/";
+const markerIndex = imageUrl.indexOf(marker);
+
+if (markerIndex === -1) {
+  throw new Error("หา path ของรูป LINE MAN ไม่เจอ");
+}
+
+const filePath = decodeURIComponent(
+  imageUrl.substring(markerIndex + marker.length)
+);
+
+console.log("กำลังโหลดรูป:", filePath);
+
+const { data: imageData, error: imageError } = await supabase.storage
+  .from("lineman-orders")
+  .download(filePath);
+
+if (imageError) {
+  throw new Error(`โหลดรูป LINE MAN ไม่สำเร็จ: ${imageError.message}`);
+}
+
+const arrayBuffer = await imageData.arrayBuffer();
+const imageBuffer = Buffer.from(arrayBuffer);
+const processedImageBuffer = await sharp(imageBuffer)
+  .resize({
+    width: 1400,
+    withoutEnlargement: false,
+  })
+  .grayscale()
+  .normalize()
+  .sharpen()
+  .threshold(200)
+  .png()
+  .toBuffer();
+
+  const doc = new PDFDocument({
+    size: [PAPER_WIDTH, PAPER_HEIGHT],
+    margin: 0,
+  });
+
+  const stream = fs.createWriteStream(pdfPath);
+  doc.pipe(stream);
+
+  // หัวกระดาษ
+  if (fs.existsSync(THAI_FONT_BOLD)) {
+    doc.registerFont("ThaiBold", THAI_FONT_BOLD);
+  }
+
+  const HEADER_X = 8;
+const HEADER_WIDTH = PAPER_WIDTH - 24;
+
+doc
+  .font("ThaiBold")
+  .fontSize(14)
+  .text("LINE MAN ORDER", HEADER_X, 8, {
+    width: HEADER_WIDTH,
+    align: "center",
+  });
+
+  // Screenshot
+const LINEMAN_IMAGE_WIDTH = 186;
+const LINEMAN_SHIFT_X = -12; // ขยับซ้าย
+const LINEMAN_IMAGE_X =
+  (PAPER_WIDTH - LINEMAN_IMAGE_WIDTH) / 2 + LINEMAN_SHIFT_X;
+
+doc.image(processedImageBuffer, LINEMAN_IMAGE_X, 35, {
+  width: LINEMAN_IMAGE_WIDTH,
+});
+
+  doc.end();
+
+  await new Promise((resolve, reject) => {
+    stream.on("finish", resolve);
+    stream.on("error", reject);
+  });
+
+  return pdfPath;
+}
+
+async function printLineManJob(job) {
+  const copies = Number(job.copies || 2);
+
+  console.log(
+    `LINE MAN Job #${job.id} | จำนวน ${copies} ใบ`
+  );
+
+  // เปลี่ยนเป็น printing ก่อน กันปริ้นซ้ำ
+  const { error: printingError } = await supabase
+    .from("print_jobs")
+    .update({
+      status: "printing",
+    })
+    .eq("id", job.id);
+
+  if (printingError) {
+    throw new Error(printingError.message);
+  }
+
+  let pdfPath;
+
+  try {
+    pdfPath = await createLineManPdf(job.image_url);
+
+    // ปริ้นตามจำนวน copies
+    for (let i = 0; i < copies; i++) {
+      console.log(
+        `กำลังปริ้น LINE MAN #${job.id} ใบ ${i + 1}/${copies}`
+      );
+
+      await print(pdfPath, {
+        printer: PRINTER_NAME,
+        scale: "noscale",
+      });
+    }
+
+    const { error: printedError } = await supabase
+      .from("print_jobs")
+      .update({
+        status: "printed",
+        printed_at: new Date().toISOString(),
+      })
+      .eq("id", job.id);
+
+    if (printedError) {
+      throw new Error(printedError.message);
+    }
+
+    console.log(`LINE MAN Job #${job.id} ปริ้นเรียบร้อย ✅`);
+  } catch (err) {
+    console.error(
+      `LINE MAN Job #${job.id} ปริ้นไม่สำเร็จ:`,
+      err.message
+    );
+
+    // ถ้าพลาด ให้กลับไป pending เพื่อให้ลองใหม่
+    await supabase
+      .from("print_jobs")
+      .update({
+        status: "pending",
+      })
+      .eq("id", job.id);
+  } finally {
+    if (pdfPath) {
+      setTimeout(() => {
+        try {
+          fs.unlinkSync(pdfPath);
+        } catch {}
+      }, 5000);
+    }
+  }
+}
+
+async function checkAndPrintLineMan() {
+  if (isLineManPrinting) return;
+
+  isLineManPrinting = true;
+
+  try {
+    const { data, error } = await supabase
+      .from("print_jobs")
+      .select("*")
+      .eq("status", "pending")
+      .order("created_at", { ascending: true })
+      .limit(1);
+
+    if (error) {
+      console.error(
+        "โหลด LINE MAN print job ไม่สำเร็จ:",
+        error.message
+      );
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      return;
+    }
+
+    await printLineManJob(data[0]);
+  } catch (err) {
+    console.error(
+      "เกิด error ตอนเช็ก LINE MAN:",
+      err.message
+    );
+  } finally {
+    isLineManPrinting = false;
+  }
+}
 console.log("Print server started...");
 console.log(`Printer: ${PRINTER_NAME}`);
 console.log("กำลังรอออเดอร์ใหม่...");
 
 checkAndPrintOrders();
+checkAndPrintLineMan();
+
 setInterval(checkAndPrintOrders, CHECK_EVERY_MS);
+setInterval(checkAndPrintLineMan, CHECK_EVERY_MS);

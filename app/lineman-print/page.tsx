@@ -5,6 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const [copies, setCopies] = useState(1);
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
@@ -60,11 +61,11 @@ export default function LineManPrintPage() {
       const { error: insertError } = await supabase
         .from("print_jobs")
         .insert({
-          image_url: imageUrl,
-          printer_name: "kitchen",
-          status: "pending",
-          copies: 2,
-        });
+  image_url: imageUrl,
+  printer_name: "kitchen",
+  status: "pending",
+  copies: copies,
+});
 
       if (insertError) {
         throw insertError;
@@ -131,7 +132,48 @@ export default function LineManPrintPage() {
           />
         </div>
       )}
+<div style={{ marginTop: 20 }}>
+  <div style={{ fontWeight: 700, marginBottom: 8 }}>
+    จำนวนใบที่จะปริ้น
+  </div>
 
+  <div
+    style={{
+      display: "flex",
+      gap: 10,
+    }}
+  >
+    <button
+      type="button"
+      onClick={() => setCopies(1)}
+      style={{
+        flex: 1,
+        padding: 14,
+        borderRadius: 10,
+        border: copies === 1 ? "2px solid #000" : "1px solid #ccc",
+        fontWeight: 700,
+        cursor: "pointer",
+      }}
+    >
+      1 ใบ
+    </button>
+
+    <button
+      type="button"
+      onClick={() => setCopies(2)}
+      style={{
+        flex: 1,
+        padding: 14,
+        borderRadius: 10,
+        border: copies === 2 ? "2px solid #000" : "1px solid #ccc",
+        fontWeight: 700,
+        cursor: "pointer",
+      }}
+    >
+      2 ใบ
+    </button>
+  </div>
+</div>
       <button
         onClick={handlePrint}
         disabled={loading || !file}
