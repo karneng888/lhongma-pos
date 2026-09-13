@@ -23,6 +23,7 @@ const LEFT_MARGIN = 4;
 const RIGHT_MARGIN = 50;
 const CONTENT_WIDTH = PAPER_WIDTH - LEFT_MARGIN - RIGHT_MARGIN;
 const KITCHEN_SHIFT_X = -12;
+const KITCHEN_TEXT_SHIFT_X = -4;
 
 // ฟอนต์ไทยใน Windows
 const THAI_FONT = "C:\\Windows\\Fonts\\tahoma.ttf";
@@ -146,11 +147,12 @@ function drawLeftText(doc, text, fontSize, isBold = false) {
   doc
     .font(isBold ? "ThaiBold" : "Thai")
     .fontSize(fontSize)
-    .text(text, LEFT_MARGIN + KITCHEN_SHIFT_X, doc.y, {
+    .text(text, LEFT_MARGIN + KITCHEN_TEXT_SHIFT_X, doc.y, {
       width: CONTENT_WIDTH,
       align: "left",
       lineGap: 3,
     });
+
 }
 
 async function createKitchenPdf(orders, kitchenTitle) {
