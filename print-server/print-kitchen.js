@@ -19,8 +19,8 @@ const PAPER_WIDTH = 226;
 const PAPER_HEIGHT = 1400;
 
 // Margin ของใบครัวปกติ
-const LEFT_MARGIN = 6;
-const RIGHT_MARGIN = 6;
+const LEFT_MARGIN = 4;
+const RIGHT_MARGIN = 50;
 const CONTENT_WIDTH = PAPER_WIDTH - LEFT_MARGIN - RIGHT_MARGIN;
 
 // ฟอนต์ไทยใน Windows
@@ -495,7 +495,7 @@ async function printLineManJob(job) {
 
       await print(pdfPath, {
         printer: PRINTER_NAME,
-        scale: "noscale",
+        scale: "fit",
       });
     }
 
