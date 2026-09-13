@@ -52,14 +52,14 @@ export default function LineManPrintPage() {
       }
 
       // 2) สร้าง Print Job
-      // เก็บ path ของไฟล์ตรง ๆ ไม่ใช้ Public URL
+      // เก็บ path ตรง ๆ เช่น lineman-123456789.JPG
       const { error: insertError } = await supabase
         .from("print_jobs")
         .insert({
           image_url: uploadData.path,
           printer_name: "kitchen",
           status: "pending",
-          copies: copies,
+          copies,
         });
 
       if (insertError) {
@@ -72,10 +72,7 @@ export default function LineManPrintPage() {
       setPreview("");
     } catch (error: any) {
       console.error(error);
-
-      setMessage(
-        `❌ ${error?.message || "เกิดข้อผิดพลาด"}`
-      );
+      setMessage(`❌ ${error?.message || "เกิดข้อผิดพลาด"}`);
     } finally {
       setLoading(false);
     }
@@ -107,7 +104,6 @@ export default function LineManPrintPage() {
         อัปโหลด Screenshot ออเดอร์ แล้วส่งไปพิมพ์ที่ร้าน
       </p>
 
-      {/* เลือกรูป */}
       <label
         style={{
           display: "block",
@@ -130,7 +126,6 @@ export default function LineManPrintPage() {
         />
       </label>
 
-      {/* Preview */}
       {preview && (
         <div
           style={{
@@ -149,7 +144,6 @@ export default function LineManPrintPage() {
         </div>
       )}
 
-      {/* จำนวนใบ */}
       <div
         style={{
           marginTop: 20,
@@ -177,14 +171,8 @@ export default function LineManPrintPage() {
               flex: 1,
               padding: 14,
               borderRadius: 10,
-              border:
-                copies === 1
-                  ? "2px solid #000"
-                  : "1px solid #ccc",
-              background:
-                copies === 1
-                  ? "#f0f0f0"
-                  : "#fff",
+              border: copies === 1 ? "2px solid #000" : "1px solid #ccc",
+              background: copies === 1 ? "#f0f0f0" : "#fff",
               fontWeight: 700,
               cursor: "pointer",
             }}
@@ -199,14 +187,8 @@ export default function LineManPrintPage() {
               flex: 1,
               padding: 14,
               borderRadius: 10,
-              border:
-                copies === 2
-                  ? "2px solid #000"
-                  : "1px solid #ccc",
-              background:
-                copies === 2
-                  ? "#f0f0f0"
-                  : "#fff",
+              border: copies === 2 ? "2px solid #000" : "1px solid #ccc",
+              background: copies === 2 ? "#f0f0f0" : "#fff",
               fontWeight: 700,
               cursor: "pointer",
             }}
@@ -216,7 +198,6 @@ export default function LineManPrintPage() {
         </div>
       </div>
 
-      {/* Send */}
       <button
         onClick={handlePrint}
         disabled={loading || !file}
@@ -228,14 +209,8 @@ export default function LineManPrintPage() {
           fontWeight: 700,
           border: "none",
           borderRadius: 12,
-          cursor:
-            loading || !file
-              ? "not-allowed"
-              : "pointer",
-          opacity:
-            loading || !file
-              ? 0.6
-              : 1,
+          cursor: loading || !file ? "not-allowed" : "pointer",
+          opacity: loading || !file ? 0.6 : 1,
         }}
       >
         {loading
@@ -243,7 +218,6 @@ export default function LineManPrintPage() {
           : `🖨️ SEND TO PRINT (${copies} ใบ)`}
       </button>
 
-      {/* Message */}
       {message && (
         <div
           style={{
