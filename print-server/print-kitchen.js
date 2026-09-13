@@ -248,7 +248,7 @@ async function printKitchenTicket(orders, kitchenTitle) {
   try {
     await print(pdfPath, {
       printer: PRINTER_NAME,
-      scale: "fit",
+      scale: "noscale",
     });
   } finally {
     setTimeout(() => {
