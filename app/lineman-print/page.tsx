@@ -5,7 +5,7 @@ import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const [copies, setCopies] = useState(1);
+
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
@@ -14,6 +14,7 @@ export default function LineManPrintPage() {
   const [preview, setPreview] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [copies, setCopies] = useState(1);
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const selectedFile = e.target.files?.[0];
