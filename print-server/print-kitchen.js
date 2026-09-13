@@ -364,25 +364,19 @@ async function createLineManPdf(imageUrl) {
   );
 
   // ดึงชื่อไฟล์จาก image_url
-const marker = "/lineman-orders/";
-const markerIndex = imageUrl.indexOf(marker);
-
-if (markerIndex === -1) {
-  throw new Error("หา path ของรูป LINE MAN ไม่เจอ");
-}
-
-const filePath = decodeURIComponent(
-  imageUrl.substring(markerIndex + marker.length)
-);
+const filePath = imageUrl;
 
 console.log("กำลังโหลดรูป:", filePath);
 
-const { data: imageData, error: imageError } = await supabase.storage
-  .from("lineman-orders")
-  .download(filePath);
+const { data: imageData, error: imageError } =
+  await supabase.storage
+    .from("lineman-orders")
+    .download(filePath);
 
 if (imageError) {
-  throw new Error(`โหลดรูป LINE MAN ไม่สำเร็จ: ${imageError.message}`);
+  throw new Error(
+    `โหลดรูป LINE MAN ไม่สำเร็จ: ${imageError.message}`
+  );
 }
 
 const arrayBuffer = await imageData.arrayBuffer();
