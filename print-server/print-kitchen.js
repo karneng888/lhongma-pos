@@ -22,6 +22,7 @@ const PAPER_HEIGHT = 1400;
 const LEFT_MARGIN = 4;
 const RIGHT_MARGIN = 50;
 const CONTENT_WIDTH = PAPER_WIDTH - LEFT_MARGIN - RIGHT_MARGIN;
+const KITCHEN_SHIFT_X = -12;
 
 // ฟอนต์ไทยใน Windows
 const THAI_FONT = "C:\\Windows\\Fonts\\tahoma.ttf";
@@ -122,8 +123,8 @@ function drawDivider(doc) {
   const y = doc.y + 8;
 
   doc
-    .moveTo(LEFT_MARGIN, y)
-    .lineTo(PAPER_WIDTH - RIGHT_MARGIN, y)
+    .moveTo(LEFT_MARGIN + KITCHEN_SHIFT_X, y)
+    .lineTo(PAPER_WIDTH - RIGHT_MARGIN + KITCHEN_SHIFT_X, y)
     .lineWidth(1)
     .stroke();
 
@@ -134,7 +135,7 @@ function drawCenteredText(doc, text, fontSize, isBold = false) {
   doc
     .font(isBold ? "ThaiBold" : "Thai")
     .fontSize(fontSize)
-    .text(text, LEFT_MARGIN, doc.y, {
+    .text(text, LEFT_MARGIN + KITCHEN_SHIFT_X, doc.y, {
       width: CONTENT_WIDTH,
       align: "center",
       lineGap: 2,
@@ -145,7 +146,7 @@ function drawLeftText(doc, text, fontSize, isBold = false) {
   doc
     .font(isBold ? "ThaiBold" : "Thai")
     .fontSize(fontSize)
-    .text(text, LEFT_MARGIN, doc.y, {
+    .text(text, LEFT_MARGIN + KITCHEN_SHIFT_X, doc.y, {
       width: CONTENT_WIDTH,
       align: "left",
       lineGap: 3,
