@@ -96,7 +96,7 @@ const mainProteinOptions: MenuOptionGroup = {
     { id: "sliced-beef", name: "เนื้อชิ้น", englishName: "Sliced Beef",  price: 10 },
     { id: "crispy-chicken", name: "ไก่กรอบ", englishName: "Crispy Chicken",  price: 0 },
     { id: "stewed-pork", name: "หมูตุ๋น", englishName: "Braised pork", price: 0 },
-    { id: "stewed-beef", name: "เนื้อตุ๋น", englishName: "Braised beef", price: 5 },
+    { id: "stewed-beef", name: "เนื้อตุ๋น", englishName: "Braised beef", price: 10 },
     { id: "sour-pork", name: "แหนม", englishName: "Sour pork", price: 0 },
     { id: "Boar", name: "หมูป่า", englishName: "Boar", price: 10 },
     { id: "Frog", name: "กบ", englishName: "Frog", price: 5 },
@@ -392,6 +392,7 @@ const noodleOptions: MenuOptionGroup[] = [
       { id: "dry", name: "แห้ง", englishName: "Dry", price: 0 },
     ],
   },
+  
   {
   id: "egg",
   name: "ไข่",
@@ -560,9 +561,16 @@ export const menuItems: MenuItem[] = [
     station: "noodle",
     optionGroups: noodleOptions,
   },
-  
   {
     id: 14,
+    name: "เยนตาโฟต้มยำ",
+    englishName: "Tom yum Yentafo (Pink soup)",
+    price: 60,
+    station: "noodle",
+    optionGroups: noodleOptions,
+  },
+  {
+    id: 15,
     name: "เกาเหลา",
     englishName: "No-Noodle Soup (Gaolaou)",
     price: 60,
