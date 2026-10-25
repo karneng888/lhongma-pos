@@ -22,7 +22,7 @@ const tableLayout = [
   { tableNo: "2", left: "8%", top: "26%" },
   { tableNo: "3", left: "8%", top: "44%" },
   { tableNo: "4", left: "8%", top: "62%" },
-  //{ tableNo: "5", left: "8%", top: "80%" },
+  { tableNo: "5", left: "8%", top: "80%" },
 
   { tableNo: "6", left: "40%", top: "20%" },
   { tableNo: "7", left: "40%", top: "40%" },
